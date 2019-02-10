@@ -1,12 +1,15 @@
 # My-Projects
 this repository contains most of my projects in my studying career.
 
-1- Algorithm course: preformed the convex-hull algorithm with GUI
+1- Datastructers course:
 
-2- Database course: creating my database by using Mysql and connecting it using java + GUI 
+2- Algorithm course: preformed the convex-hull algorithm with GUI
 
-3- OS course: A simple multiprogramming OS simulation with a limited ram
+3- Database course: creating my database by using Mysql and connecting it using java + GUI 
 
-4- Ai course: solving the cross-river puzzle using breadth-first-search approach
+4- OS course: A simple multiprogramming OS simulation with a limited ram
 
-5- Datastructers course:
+5- Ai course: solving the cross-river puzzle using breadth-first-search approach
+
+6- Graduation project : Classyfing twitter users by machine learing approach while using java to pre-process raw data 
+   and then using weka to build the model and choose the most effective features. (source code will be uploaded soon)

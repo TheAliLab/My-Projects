@@ -1,5 +1,5 @@
 //All classes are written here and last class is Main
-//if you want only convex algorithm then look at class ( Point & QuickHullData ) 
+//if you want only convex-hull algorithm then look at class ( Point & QuickHullData ) 
 
 package quickhull;
 

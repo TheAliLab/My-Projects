@@ -1,5 +1,5 @@
 # My-Projects
-this repository contains most of my projects in my studying career.
+this repository contains most of my projects in my studying career as TXT files just to review it and help others.
 
 1- Datastructers course:
 

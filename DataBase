@@ -1,0 +1,807 @@
+//All classes are written here and last class is Main
+
+import java.sql.*;
+import javax.script.*;
+import javax.swing.JOptionPane;
+import java.awt.EventQueue;
+import java.sql.Connection;
+import java.sql.*;
+import javax.script.*;
+import javax.swing.JOptionPane;
+import javax.swing.JFrame;
+import java.awt.Button;
+import java.awt.Color;
+import java.awt.Panel;
+import javax.swing.JTabbedPane;
+import javax.swing.JPanel;
+import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import javax.swing.JList;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.JLabel;
+import java.awt.SystemColor;
+import java.awt.Font;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import javax.swing.JScrollPane;
+import javax.swing.JMenuItem;
+import javax.swing.JSlider;
+import javax.swing.JComboBox;
+import javax.swing.DefaultComboBoxModel;
+
+public class Main {
+	
+    Connection conn = null;
+    public static Connection getConnection () {
+        Connection conn = null;
+        try{
+        
+        //insert your information of your database (mysql)
+        String driver = "";
+        String url = "";
+        String userName = "";
+        String password = "";
+        Class.forName(driver);
+        conn = (Connection) DriverManager.getConnection(url, userName, password);
+        
+       
+        }
+        catch (Exception e){
+        System.out.println(e.getMessage() + " NOT Connected");
+        }
+        finally{
+        return conn;
+        }
+        }
+	private JFrame frame;
+
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					Main window = new Main();
+					window.frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+
+	private JTable Menu;
+	private JTable Serves_table;
+	private JTable Costumer_t;
+	private JTable Employee_t;
+	private JTextField Costumer_cancel;
+	private JTextField costumer_Rec;
+	private JTextField paymentTxt;
+	private JTextField Tnum;
+	private JTextField TableRes;
+	private JTextField FireEmp;
+	private JTextField Add_meal;
+	private JTextField textField_4;
+	private JTextField textField_5;
+	private JTextField DeleteMeal;
+	private JTextField Add_id;
+	private JTextField add_name;
+	private JTextField textField_6;
+	private JTextField textField_7;
+	private JTextField textField;
+	private JTextField textField_8;
+	private JTextField textField_9;
+	private JTextField textField_10;
+	private JComboBox Meal_List; 
+	private JComboBox combox;
+	private JComboBox comboBox_1;
+	
+	public void fillComboBox(){
+		try{
+			String query = "select name from meal ";
+			PreparedStatement pst = conn.prepareStatement(query);
+			ResultSet rs = pst.executeQuery();
+			
+			while(rs.next()){
+			 Meal_List.addItem(rs.getString("name"));
+			}
+			pst.close();
+			rs.close();
+
+			
+		}catch(SQLException q){
+			JOptionPane.showMessageDialog(null, q.getMessage());
+			
+		}
+	}
+
+	public Main() {
+		initialize();
+		conn = sql.getConnection();
+				
+	}
+	
+	
+	
+	
+	
+	/**
+	 * Initialize the contents of the frame.
+	 */
+	private void initialize() {
+		frame = new JFrame();
+		frame.setBounds(100, 100, 650, 450);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.getContentPane().setLayout(null);
+		frame.setBackground(Color.CYAN);
+		
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		tabbedPane.setBounds(10, 5, 614, 372);
+		frame.getContentPane().add(tabbedPane);
+		
+		JPanel panel = new JPanel();
+		panel.setBackground(SystemColor.menu);
+		tabbedPane.addTab("Meal", null, panel, null);
+		panel.setLayout(null);
+		
+		
+		//Meal Entity
+		JButton Menu_t = new JButton("Menu");
+		Menu_t.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try{
+					String query = "select * from ali.meal";
+					PreparedStatement pst = conn.prepareStatement(query);
+					ResultSet rs = pst.executeQuery();
+					Menu.setModel(DbUtils.resultSetToTableModel(rs));
+					pst.close();
+					rs.close();
+					
+				} catch(SQLException q){
+					JOptionPane.showMessageDialog(null, q.getSQLState());
+					
+				}
+			}
+		});
+		Menu_t.setBounds(10, 178, 89, 23);
+		panel.add(Menu_t);
+		
+		JList list = new JList();
+		list.setBounds(161, 11, -123, 177);
+		panel.add(list);
+		
+		Menu = new JTable();
+		Menu.setBounds(10, 17, 356, 162);
+		panel.add(Menu);
+		
+		JButton btnAddNewMeal = new JButton("Add new Meal");
+		btnAddNewMeal.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(Add_meal.getText().equals("")){
+					JOptionPane.showMessageDialog(null, "Name is Empty!!!");
+				}
+				else
+				try{
+					String query = "insert into meal(name,price,Descreption)Values(?, ?, ?)";
+					PreparedStatement pst = conn.prepareStatement(query); 
+					
+					pst.setString(1,Add_meal.getText());				
+					pst.setString(2,textField_4.getText()); 
+					pst.setString(3,textField_5.getText());
+					pst.execute();
+					Meal_List.addItem(Add_meal.getText());
+					JOptionPane.showMessageDialog(null, "Meal add");
+					
+					
+					pst.close();
+				
+					
+									
+				} catch(Exception q){
+					JOptionPane.showMessageDialog(null, q.getMessage()); 
+				}
+			}
+		});
+		btnAddNewMeal.setBounds(10, 258, 139, 23);
+		panel.add(btnAddNewMeal);
+		
+		Add_meal = new JTextField();
+		Add_meal.setBounds(10, 304, 86, 20);
+		panel.add(Add_meal);
+		Add_meal.setColumns(10);
+		
+		textField_4 = new JTextField();
+		textField_4.setColumns(10);
+		textField_4.setBounds(108, 304, 86, 20);
+		panel.add(textField_4);
+		
+		textField_5 = new JTextField();
+		textField_5.setColumns(10);
+		textField_5.setBounds(215, 303, 86, 20);
+		panel.add(textField_5);
+		
+		JLabel lblNewLabel = new JLabel("Name");
+		lblNewLabel.setBounds(10, 0, 46, 14);
+		panel.add(lblNewLabel);
+		
+		JLabel lblPrice = new JLabel("   Price $");
+		lblPrice.setBounds(119, 0, 56, 14);
+		panel.add(lblPrice);
+		
+		JLabel lblDescreption = new JLabel("    Descreption");
+		lblDescreption.setBounds(225, 0, 97, 14);
+		panel.add(lblDescreption);
+		
+		JButton btnDeleteMeal = new JButton("Delete Meal");
+		btnDeleteMeal.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+try{
+					
+					String query = "delete from meal where name='" +DeleteMeal.getText()+ "'  ";
+					PreparedStatement pst = conn.prepareStatement(query);
+					pst.execute();
+					
+					
+					pst.close();
+										
+				} catch(SQLException q ){
+					JOptionPane.showMessageDialog(null, q.getMessage());
+					
+			}
+			}
+		});
+		btnDeleteMeal.setBounds(496, 197, 103, 23);
+		panel.add(btnDeleteMeal);
+		
+		DeleteMeal = new JTextField();
+		DeleteMeal.setBounds(496, 231, 86, 20);
+		panel.add(DeleteMeal);
+		DeleteMeal.setColumns(10);
+		
+		textField = new JTextField();
+		textField.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent arg0) {
+				try{
+					String query = "select * from meal where name=? ";
+					PreparedStatement pst = conn.prepareStatement(query);
+					pst.setString(1, textField.getText());
+					ResultSet rs = pst.executeQuery();
+					
+					Menu.setModel(DbUtils.resultSetToTableModel(rs));
+					pst.close();
+					rs.close();
+					
+				} catch(SQLException q){
+					JOptionPane.showMessageDialog(null, q.getSQLState());
+					
+				}
+				
+			}
+		});
+		textField.setBounds(417, 50, 165, 32);
+		panel.add(textField);
+		textField.setColumns(10);
+		
+		JLabel lblLookingFor = new JLabel("Looking for ?");
+		lblLookingFor.setBounds(417, 25, 111, 23);
+		panel.add(lblLookingFor);
+		
+		JLabel lblMealName = new JLabel("Meal name");
+		lblMealName.setBounds(10, 291, 63, 14);
+		panel.add(lblMealName);
+		
+		JLabel lblPrice_1 = new JLabel("Price");
+		lblPrice_1.setBounds(108, 291, 63, 14);
+		panel.add(lblPrice_1);
+		
+		JLabel lblDescreption_1 = new JLabel("Descreption");
+		lblDescreption_1.setBounds(216, 291, 63, 14);
+		panel.add(lblDescreption_1);
+		
+		JLabel lblMealName_1 = new JLabel("Meal name :");
+		lblMealName_1.setBounds(413, 234, 79, 14);
+		panel.add(lblMealName_1);
+		
+		JPanel panel_1 = new JPanel();
+		tabbedPane.addTab("Employee", null, panel_1, null);
+		panel_1.setLayout(null);
+		
+		//Employee Entity
+		JButton btnNewButton_2 = new JButton("Employee list");
+		btnNewButton_2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try{
+					String query = "select * from ali.employee";
+					PreparedStatement pst = conn.prepareStatement(query);
+					ResultSet rs = pst.executeQuery();
+					Employee_t.setModel(DbUtils.resultSetToTableModel(rs));
+					
+				} catch(SQLException q){
+					JOptionPane.showMessageDialog(null, q.getSQLState());
+					
+				}
+				
+			}
+		});
+		btnNewButton_2.setBounds(0, 224, 121, 23);
+		panel_1.add(btnNewButton_2);
+		
+		Employee_t = new JTable();
+		Employee_t.setBounds(0, 47, 211, 172);
+		panel_1.add(Employee_t);
+		
+		JButton btnNewButton = new JButton("Hire Employee");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try{
+					String query = "insert into employee(Eid,name,Salary,role)Values(?, ?, ?,?)";
+					PreparedStatement pst = conn.prepareStatement(query); 
+					
+					pst.setString(1,Add_id.getText());
+					pst.setString(2,add_name.getText()); 
+					pst.setString(3,textField_6 .getText());
+					pst.setString(4,textField_7.getText());
+					combox.addItem(Add_id.getText());
+					
+					
+					pst.execute();
+					JOptionPane.showMessageDialog(null, "welcome");
+
+					pst.close();
+										
+				} catch(Exception q){
+					JOptionPane.showMessageDialog(null, q.getMessage());
+				}	
+			}
+		});
+		btnNewButton.setBounds(489, 144, 110, 23);
+		panel_1.add(btnNewButton);
+		
+		JButton btnFireEmployee = new JButton("Fire Employee");
+		btnFireEmployee.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try{
+					
+					String query = "delete from employee where Eid='" +FireEmp.getText()+ "'  ";
+					PreparedStatement pst = conn.prepareStatement(query);
+					pst.execute();
+					
+					pst.close();
+										
+				} catch(SQLException q ){
+					JOptionPane.showMessageDialog(null, q.getMessage());
+					
+			}
+				
+				
+			}
+		});
+		btnFireEmployee.setBounds(489, 47, 110, 23);
+		panel_1.add(btnFireEmployee);
+		
+		JLabel lblId = new JLabel("  id");
+		lblId.setBounds(0, 33, 29, 14);
+		panel_1.add(lblId);
+		
+		JLabel lblName = new JLabel("  Name");
+		lblName.setBounds(39, 33, 46, 14);
+		panel_1.add(lblName);
+		
+		JLabel lblSalary = new JLabel("Salary");
+		lblSalary.setBounds(95, 33, 46, 14);
+		panel_1.add(lblSalary);
+		
+		JLabel lblRole = new JLabel("Role");
+		lblRole.setBounds(151, 33, 46, 14);
+		panel_1.add(lblRole);
+		
+		FireEmp = new JTextField();
+		FireEmp.setBounds(489, 71, 86, 20);
+		panel_1.add(FireEmp);
+		FireEmp.setColumns(10);
+		
+		Add_id = new JTextField();
+		Add_id.setBounds(513, 179, 86, 20);
+		panel_1.add(Add_id);
+		Add_id.setColumns(10);
+		
+		add_name = new JTextField();
+		add_name.setColumns(10);
+		add_name.setBounds(513, 211, 86, 20);
+		panel_1.add(add_name);
+		
+		textField_6 = new JTextField();
+		textField_6.setColumns(10);
+		textField_6.setBounds(513, 242, 86, 20);
+		panel_1.add(textField_6);
+		
+		textField_7 = new JTextField();
+		textField_7.setColumns(10);
+		textField_7.setBounds(513, 276, 86, 20);
+		panel_1.add(textField_7);
+		
+		textField_10 = new JTextField();
+		textField_10.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				try{
+					String query = "select * from employee where Eid=? ";
+					PreparedStatement pst = conn.prepareStatement(query);
+					pst.setString(1, textField_10.getText());
+					ResultSet rs = pst.executeQuery();
+					
+					Employee_t.setModel(DbUtils.resultSetToTableModel(rs));
+					pst.close();
+					rs.close();
+					
+				} catch(SQLException q){
+					JOptionPane.showMessageDialog(null, q.getSQLState());
+					
+				}
+
+			}
+		});
+		textField_10.setBounds(297, 74, 86, 20);
+		panel_1.add(textField_10);
+		textField_10.setColumns(10);
+		
+		JLabel lblFindEmployee = new JLabel("Find Employee");
+		lblFindEmployee.setBounds(297, 43, 86, 23);
+		panel_1.add(lblFindEmployee);
+		
+		JLabel lblId_1 = new JLabel("              id :");
+		lblId_1.setBounds(231, 77, 63, 14);
+		panel_1.add(lblId_1);
+		
+		JLabel label_1 = new JLabel("              id :");
+		label_1.setBounds(445, 182, 63, 14);
+		panel_1.add(label_1);
+		
+		JLabel lblName_1 = new JLabel("         name:");
+		lblName_1.setBounds(445, 214, 63, 14);
+		panel_1.add(lblName_1);
+		
+		JLabel lblSalary_1 = new JLabel("   Salary :");
+		lblSalary_1.setBounds(453, 245, 47, 14);
+		panel_1.add(lblSalary_1);
+		
+		JLabel lblRole_1 = new JLabel("         Role :");
+		lblRole_1.setBounds(441, 279, 63, 14);
+		panel_1.add(lblRole_1);
+		
+		JPanel panel_2 = new JPanel();
+		tabbedPane.addTab("Serves", null, panel_2, null);
+		panel_2.setLayout(null);
+		
+		Serves_table = new JTable();
+		Serves_table.setBounds(22, 49, 198, 162);
+		panel_2.add(Serves_table);
+		
+		
+		//Servings Entity
+		JButton btnServings = new JButton("Servings");
+		btnServings.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				try{
+					String query = "select * from ali.serves";
+					PreparedStatement pst = conn.prepareStatement(query);
+					ResultSet rs = pst.executeQuery();
+					Serves_table.setModel(DbUtils.resultSetToTableModel(rs));
+					pst.close();
+					rs.close();
+					
+				} catch(SQLException q){
+					JOptionPane.showMessageDialog(null, q.getSQLState());
+					
+				}
+			}
+		});
+		btnServings.setBounds(22, 211, 89, 23);
+		panel_2.add(btnServings);
+		
+		JLabel lblTable = new JLabel("  Table#");
+		lblTable.setBounds(22, 31, 46, 14);
+		panel_2.add(lblTable);
+		
+		JLabel lblWaiter = new JLabel("  Emp-id");
+		lblWaiter.setBounds(78, 31, 57, 14);
+		panel_2.add(lblWaiter);
+		
+		JLabel lblRecipet = new JLabel("  Recipet");
+		lblRecipet.setBounds(145, 31, 54, 14);
+		panel_2.add(lblRecipet);
+		
+		JButton button = new JButton("Make Res");
+		button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try{
+					String query = "insert into serves( Tnum,Empid,recNumber)Values(?, ?, ?)";
+					PreparedStatement pst = conn.prepareStatement(query); 
+					
+					pst.setString(1,TableRes.getText());
+					pst.setString(2,(String)combox.getSelectedItem());
+					pst.setString(3,(String)comboBox_1.getSelectedItem());
+					
+					pst.execute();
+					JOptionPane.showMessageDialog(null, "Reservation made");
+
+					pst.close();
+										
+				} catch(Exception q){
+					JOptionPane.showMessageDialog(null, q.getMessage());
+				}	
+			}
+		});
+		button.setBounds(387, 249, 108, 23);
+		panel_2.add(button);
+		
+		JButton button_1 = new JButton("Check out");
+		button_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				try{
+					String query = "delete from serves where Tnum='" +Tnum.getText()+ "'  ";
+					PreparedStatement pst = conn.prepareStatement(query);
+					pst.execute();
+					
+					
+					JOptionPane.showMessageDialog(null, "Checked out");
+					pst.close();
+										
+				} catch(SQLException e){
+					JOptionPane.showMessageDialog(null, e.getMessage());
+					
+			}
+			}
+		});
+		button_1.setBounds(387, 211, 108, 23);
+		panel_2.add(button_1);
+		
+		Tnum = new JTextField();
+		Tnum.setBounds(505, 212, 74, 20);
+		panel_2.add(Tnum);
+		Tnum.setColumns(10);
+		
+		TableRes = new JTextField();
+		TableRes.setColumns(10);
+		TableRes.setBounds(314, 294, 74, 20);
+		panel_2.add(TableRes);
+		
+		textField_9 = new JTextField();
+		textField_9.addKeyListener(new KeyAdapter() {
+			@Override
+			
+			public void keyReleased(KeyEvent e) {
+				try{
+				String query = "select * from serves where Tnum=? ";
+				PreparedStatement pst = conn.prepareStatement(query);
+				pst.setString(1, textField_9.getText());
+				ResultSet rs = pst.executeQuery();
+				
+				Serves_table.setModel(DbUtils.resultSetToTableModel(rs));
+				pst.close();
+				rs.close();
+				
+			} catch (SQLException q){
+				JOptionPane.showMessageDialog(null, q.getSQLState());
+
+				
+				
+			}}
+		});
+		textField_9.setBounds(397, 46, 86, 20);
+		panel_2.add(textField_9);
+		textField_9.setColumns(10);
+		
+		JLabel lblSearchTable = new JLabel("Search table");
+		lblSearchTable.setBounds(398, 21, 85, 14);
+		panel_2.add(lblSearchTable);
+		
+		JLabel lblTable_1 = new JLabel("table#");
+		lblTable_1.setBounds(349, 47, 46, 14);
+		panel_2.add(lblTable_1);
+		
+		JLabel label_2 = new JLabel("table#");
+		label_2.setBounds(314, 280, 46, 14);
+		panel_2.add(label_2);
+		
+		JLabel lblEmployeeId = new JLabel("Employee id");
+		lblEmployeeId.setBounds(397, 280, 74, 14);
+		panel_2.add(lblEmployeeId);
+		
+		JLabel lblReceipt = new JLabel("Receipt");
+		lblReceipt.setBounds(485, 280, 46, 14);
+		panel_2.add(lblReceipt);
+		
+		 combox = new JComboBox();
+		combox.setBounds(396, 294, 75, 23);
+		panel_2.add(combox);
+		
+		 comboBox_1 = new JComboBox();
+		comboBox_1.setBounds(477, 294, 75, 23);
+		panel_2.add(comboBox_1);
+		
+		JPanel panel_3 = new JPanel();
+		tabbedPane.addTab("Costumer", null, panel_3, null);
+		panel_3.setLayout(null);
+		
+		Costumer_t = new JTable();
+		Costumer_t.setBounds(63, 23, 371, 162);
+		panel_3.add(Costumer_t);
+		
+		//Order Entity
+		JButton Orders_t = new JButton("Orders...");
+		Orders_t.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				try{
+					String query = "select * from ali.costumer";
+					PreparedStatement pst = conn.prepareStatement(query);
+					ResultSet rs = pst.executeQuery();
+					Costumer_t.setModel(DbUtils.resultSetToTableModel(rs));
+					pst.close();
+					rs.close();
+					
+				} catch(SQLException q){
+					JOptionPane.showMessageDialog(null, q.getSQLState());
+					
+			}
+				
+				
+				
+			}
+		});
+		Orders_t.setBounds(63, 186, 89, 23);
+		panel_3.add(Orders_t);
+		
+		JLabel lblRec = new JLabel("Rec#");
+		lblRec.setFont(new Font("Tahoma", Font.PLAIN, 12));
+		lblRec.setBounds(64, 0, 46, 14);
+		panel_3.add(lblRec);
+		
+		JLabel lblPaymen = new JLabel("payment");
+		lblPaymen.setFont(new Font("Tahoma", Font.PLAIN, 12));
+		lblPaymen.setBounds(208, 0, 46, 14);
+		panel_3.add(lblPaymen);
+		
+		JLabel lblCostorder = new JLabel("Cost_order");
+		lblCostorder.setFont(new Font("Tahoma", Font.PLAIN, 12));
+		lblCostorder.setBounds(345, 0, 90, 14);
+		panel_3.add(lblCostorder);
+		
+		JButton btnNewOder = new JButton("New oder");
+		btnNewOder.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				try{
+					String query = "insert into costumer( Receipt, Payment,Meal_Name)Values(?, ?, ?)";
+					PreparedStatement pst = conn.prepareStatement(query); 
+					
+					pst.setString(1,costumer_Rec.getText());
+					pst.setString(2,paymentTxt.getText());
+					pst.setString(3,(String)Meal_List.getSelectedItem());
+					comboBox_1.addItem(costumer_Rec.getText());
+					
+					pst.execute();
+					JOptionPane.showMessageDialog(null, "Order Added");
+
+					pst.close();
+										
+				} catch(Exception e){
+					JOptionPane.showMessageDialog(null, e.getMessage());
+				}		
+				
+			}
+		});
+		btnNewOder.setBounds(-1, 253, 111, 23);
+		panel_3.add(btnNewOder);
+		
+		//Canceling order 
+		JButton btnCancelOrder = new JButton("cancel order");
+		btnCancelOrder.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				try{
+					String query = "delete from costumer where Receipt='" +Costumer_cancel.getText()+ "'  ";
+					PreparedStatement pst = conn.prepareStatement(query);
+					pst.execute();
+					
+					
+					pst.close();
+										
+				} catch(SQLException e){
+					JOptionPane.showMessageDialog(null, e.getMessage());
+					
+			}
+				
+				
+			}
+		});
+		btnCancelOrder.setBounds(488, 264, 111, 23);
+		panel_3.add(btnCancelOrder);
+		
+		Costumer_cancel = new JTextField();
+		Costumer_cancel.setBounds(498, 291, 86, 20);
+		panel_3.add(Costumer_cancel);
+		Costumer_cancel.setColumns(10);
+		
+		costumer_Rec = new JTextField();
+		costumer_Rec.setColumns(10);
+		costumer_Rec.setBounds(-1, 301, 86, 20);
+		panel_3.add(costumer_Rec);
+		
+		paymentTxt = new JTextField();
+		paymentTxt.setColumns(10);
+		paymentTxt.setBounds(95, 301, 86, 20);
+		panel_3.add(paymentTxt);
+		
+		JLabel label = new JLabel("Rec#");
+		label.setBounds(457, 294, 46, 14);
+		panel_3.add(label);
+		
+		textField_8 = new JTextField();
+		textField_8.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent arg0) {
+				try{
+					String query = "select * from costumer where Receipt=? ";
+					PreparedStatement pst = conn.prepareStatement(query);
+					pst.setString(1, textField_8.getText());
+					ResultSet rs = pst.executeQuery();
+					
+					Costumer_t.setModel(DbUtils.resultSetToTableModel(rs));
+					pst.close();
+					rs.close();
+					
+				} catch(SQLException q){
+					JOptionPane.showMessageDialog(null, q.getSQLState());
+					
+				}
+				
+				
+			}
+		});
+		textField_8.setBounds(488, 67, 86, 20);
+		panel_3.add(textField_8);
+		textField_8.setColumns(10);
+		
+		JLabel lblSearchReceipt = new JLabel("Search Receipt");
+		lblSearchReceipt.setBounds(488, 42, 96, 14);
+		panel_3.add(lblSearchReceipt);
+		
+		JLabel lblNewLabel_1 = new JLabel("Receipt");
+		lblNewLabel_1.setBounds(3, 287, 53, 14);
+		panel_3.add(lblNewLabel_1);
+		
+		JLabel lblPayment = new JLabel("Payment");
+		lblPayment.setBounds(95, 287, 53, 14);
+		panel_3.add(lblPayment);
+		
+		JLabel lblOrder = new JLabel("Order");
+		lblOrder.setBounds(191, 287, 53, 14);
+		panel_3.add(lblOrder);
+		
+		 Meal_List = new JComboBox();
+		Meal_List.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+			}
+		});
+		Meal_List.setFont(new Font("Tahoma", Font.BOLD, 11));
+		Meal_List.setBounds(201, 300, 90, 23);
+		panel_3.add(Meal_List);
+		
+		JButton btnExit = new JButton(" Exit");
+		btnExit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
+		btnExit.setBounds(10, 388, 89, 23);
+		frame.getContentPane().add(btnExit);
+		
+	}
+}

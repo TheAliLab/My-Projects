@@ -1,0 +1,188 @@
+//All classes are written here and last class is Main
+
+
+// This class represents a pair. This class must be used as it is without modifications.
+public class Pair<U, V> {
+	public U first;
+	public V second;
+	public Pair(U first, V second) {
+		this.first = first;
+		this.second = second;
+	}
+}
+
+______________________________________________
+
+public class Sequence {
+	
+	private String seq;
+	private String header;
+	
+    	// Constructor.
+	public Sequence(String header, String seq){
+		this.header = header;
+		this.seq = seq;
+	}
+	// Return the header of the sequence.
+	public String getHeader(){
+		return header;
+	}
+	public String getSeq(){
+		return seq;
+	}
+//	// Return the usage for word length k and window step size w.
+	public Usage getUsage(int k, int w){  
+		/*
+		 * 		for(int i=0;i<seq.length()-k+1;i+=w){
+			String kmer = seq.substring(i, k+i);	
+			us1.add(kmer, 1);
+		} 
+		
+*/
+		Usage us1 =new Usage();
+		for(int i=0;i<seq.length()-k+1;i+=w){
+			String kmer = seq.substring(i, k+i);	
+			us1.add(kmer, 1);
+		} 
+		return us1;
+	}
+}
+_________________________________________________
+
+import java.io.BufferedReader;
+import java.io.Reader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.FileNotFoundException;
+
+// This class represents a set of sequences.
+public class SequenceSet {
+	static LinkedList<Sequence> seqs;
+	static LinkedList<Sequence> s;
+
+	
+	// Constructor.
+	public SequenceSet(){
+		seqs=new LinkedList<Sequence>();
+		
+	}
+
+	// Load sequences from FASTA file.
+	public static SequenceSet load(String fileName){
+		SequenceSet objofseq =new SequenceSet();
+
+		try {
+/*
+ * 			FileReader fileReader = new FileReader(fileName);
+			BufferedReader reader = new BufferedReader(fileReader);
+			String line = reader.readLine();
+			String head,seqq;
+			while(line != null){
+*/
+			FileReader fileReader = new FileReader(fileName);
+			BufferedReader reader = new BufferedReader(fileReader);
+			
+			
+			
+			String line = reader.readLine();
+			String head,seqq;
+			while(line != null){
+
+				if(line.startsWith(">")){
+					head=line.substring(1);
+					seqq = reader.readLine();
+					objofseq.seqs.insert(new Sequence(head,seqq));
+					}
+				line = reader.readLine();
+				}
+			reader.close();
+		}catch (Exception e) {
+			System.out.println("error .....");		
+		}
+		
+		return objofseq;
+		
+	}
+	// Return the global usage over all sequences in the set. The word length is k and window step size is w.
+	public Usage getUsage(int k, int w){
+		
+		Usage result=new Usage();
+		seqs.findFirst();
+
+		try{
+
+		while(!seqs.last()){
+			for(int i=0;i<seqs.retrieve().getSeq().length()-k+1;i=i+w){
+				String kmer = seqs.retrieve().getSeq().substring(i, k+i);	
+				result.add(kmer, 1);
+			}
+			seqs.findNext();
+		}
+		for(int i=0;i<seqs.retrieve().getSeq().length()-k+1;i=i+w){
+			String kmer = seqs.retrieve().getSeq().substring(i, k+i);	
+			result.add(kmer, 1);
+		}
+
+	}
+	catch (Exception e) {
+		System.out.println("NullPointerException");		
+	}
+	return result;
+	
+}
+
+	
+
+	
+	
+//	// Return all sequences in the set in the same order they appear in the file.
+	public LinkedList<Sequence> getSequences(){
+		return seqs;
+	}
+}
+
+_______________________________________________________________________________________
+
+
+// This class represents usage data at the sequence or sequence set level
+public class Usage {
+	
+	LinkedList<Pair<String,Integer>> pairsList;
+	// Constructor.
+	public Usage(){
+		pairsList = new LinkedList<Pair<String,Integer>>();
+	}
+	// Add a kmer with the corresponding number of occurrences.
+	public void add(String kmer, int count){
+		/*		Pair<String,Integer> p = new Pair<String,Integer>(kmer, count);*/
+		Pair<String,Integer> p = new Pair<String,Integer>(kmer, count);
+		int t=getCount(kmer);
+		if(t==0){
+			pairsList.insert(p);
+		}
+		else{
+			pairsList.retrieve().second+=count;
+		}
+	}
+	//Return the number of occurrences of kmer.
+	public int getCount(String kmer){
+		if(pairsList.empty())
+			return 0;
+		pairsList.findFirst();
+		while(!pairsList.last()){
+			//pairsList.retrieve().second
+			if(pairsList.retrieve().first.equals(kmer))
+				return pairsList.retrieve().second;
+			pairsList.findNext();
+		}
+		
+		if(pairsList.retrieve().first.equals(kmer))
+			return pairsList.retrieve().second;
+
+		return 0;
+	}
+	// Return all kmers with their count.
+	public LinkedList<Pair<String, Integer>> getCounts(){
+		return pairsList;
+	}
+}

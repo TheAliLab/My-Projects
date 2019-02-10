@@ -1,7 +1,7 @@
 # My-Projects
-this repository contains most of my projects in my studying career as TXT files just to review it and help others.
+This repository contains most of my projects in my studying career as TXT files just to review and help others.
 
-1- Datastructers Project:  Matching DNA pairs (2 starnds of DNA ) and compute simularity 
+1- Data-Structers Project:  Matching DNA pairs (2 starnds of DNA ) and compute simularity 
 
 2- Algorithm Project: preformed the convex-hull algorithm with GUI
 

@@ -3,7 +3,7 @@ This repository contains most of my projects in my studying career as TXT files 
 
 1- Data-Structers Project:  Matching DNA pairs (2 starnds of DNA ) and compute simularity 
 
-2- Algorithm Project: preformed the convex-hull algorithm with GUI
+2- Algorithm Project: preformed the convex-hull algorithm + GUI
 
 3- Database Project: creating my database by using Mysql and connecting it using java + GUI 
 

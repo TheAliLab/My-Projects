@@ -1,0 +1,447 @@
+//All classes are written here and last class is Main.
+
+package multiprogrammingos;
+import java.util.ArrayList;
+
+public class Process {					//class of each process
+
+    public ArrayList<String> events;
+    public String name,finishType;;
+    int next;
+    public int id;
+    public long loadTime,cputCount,cpuTime,ioCount,ioTime,waitCount,finishTime;
+
+    public Process(String name,int pid) {			//inilize the object
+        this.name = name;
+        events = new ArrayList();
+        next = 0;
+        id=pid;
+        loadTime=cputCount=cpuTime=ioCount=ioTime=waitCount=finishTime=0;
+    }
+
+    public int requredMemory() {						//ass os for more memory
+        String[] ev = events.get(next).split(" ");
+        if (ev.length == 1 || next==0) {
+            return 0;
+        }
+        return Integer.parseInt(ev[1]);
+    }
+    
+    public String toString(){			//return the string format of process
+        return "Name:"+name+" , ID:"+id+" , LoadTime:"+loadTime+" , FinishTime:"+finishTime+" , FinishType:"+
+                finishType+" , "+" CpuTime:"+cpuTime+" , CpuCount:"+cputCount+" , IOTime:"+ioTime+" , IOCount:"+
+                ioCount+" , MemoryWaitCount:"+waitCount;
+    }
+
+    public boolean run() {							//run the next task
+        if (events.size() <= next) {
+            return false;
+        }
+        try { 
+            String ev = events.get(next).split(" ")[0];			//select io or cpu task
+            String type="CPU";
+            if(events.get(next).split(" ").length==1){
+                type="IO";
+                ioCount++;
+                ioTime+=Integer.parseInt(ev);
+            }
+            else{
+                cpuTime+=Integer.parseInt(ev);
+                cputCount++;
+            }
+            MultiProgrammingOS.showMessage(name + " started "+type+" [" + events.get(next)+"]");
+            Thread.sleep(Integer.parseInt(ev));														//wait for the task time
+            MultiProgrammingOS.showMessage(name + " finished "+type+" ["+ events.get(next)+"]");
+            next++; 
+            if (events.size() <= next) {				//move to the next task
+                return false;
+            }
+           
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return true;
+    }
+}
+
+_____________________________________________________________
+
+package multiprogrammingos;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.ArrayList;
+
+public class JobLoader {
+    
+    public static int totalProcesse;
+    public static ArrayList<Process> load(String filename) { //load jobs from file to array
+
+        ArrayList<Process> ret = new ArrayList();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filename));		//open file
+            String line = null;
+            Process p=null;
+            int id=1;
+            while ((line = reader.readLine()) != null) {		//read all lines
+               String [] parts=line.split(",");
+               int i=0; 
+               p=new Process("",id++);	
+               while(parts[i].endsWith("-1")==false){
+                   if(parts[i].startsWith("PN")){
+                       p.name=parts[i].split(":")[1];
+                   }
+                   if(parts[i].startsWith("CPU")){
+                       p.events.add(parts[i].split(":")[1]+" "+parts[i+1].split(":")[1]);
+                       i++;
+                   }
+                   if(parts[i].startsWith("IO")){
+                        p.events.add(parts[i].split(":")[1]);
+                   }
+                   i++;
+               }
+               ret.add(p);
+            }
+            reader.close();
+            totalProcesse=ret.size();
+            MultiProgrammingOS.showMessage(ret.size()+" Jobs loaded to job list.");
+        } catch (Exception ex) {
+          ex.printStackTrace();
+        }
+
+        return ret;
+    }
+}
+
+
+
+____________________________________________________________________________
+
+package multiprogrammingos;
+
+import java.util.ArrayList;
+
+public class Memory {		//implement memory object
+
+    private String[] memory;
+    private static int SIZE = 192;		//memory size
+
+    public Memory() {
+        memory = new String[SIZE];			//create memory
+        for (int i = 0; i < 32; i++) {
+            memory[i] = "OS";
+        }
+
+    }
+
+    public int getFreeSize() {			//get the remaining free size of memory
+        int n = 0;
+        for (int i = 0; i < SIZE; i++) {
+            if (memory[i] == null) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    public void put(String p, int size) {			//add process to memory
+        if (getFreeSize() < size) {
+            MultiProgrammingOS.showMessage("No enough memory for process " + p);
+            return;
+        }
+        MultiProgrammingOS.showMessage(size + " MB of " + p + " loaded to memory");
+        for (int i = 0; i < SIZE && size > 0; i++) {
+            if (memory[i] == null) {
+                memory[i] = p;
+                size--;
+            }
+        }
+
+    }
+
+    public void remove(String p, int size) {		//remove process from memory up to size byte
+
+        MultiProgrammingOS.showMessage(size + " MB of " + p + " removed from memory");
+        for (int i = 0; i < SIZE && size > 0; i++) {
+            if (memory[i] == p) {
+                memory[i] = null;
+                size--;
+            }
+        }
+    }
+
+    public void remove(String p) {			//remove all bytes of proces from memory
+       int size=0;
+        for (int i = 0; i < SIZE ; i++) {
+            if (memory[i] == p) {
+                memory[i] = null;
+                size++;
+            }
+        } 
+        MultiProgrammingOS.showMessage(size + " MB of " + p + " removed from memory");
+    }
+
+    public float fullPercentage() {			//return the full percentage of memory
+        int e = getFreeSize();
+        int f = SIZE - e;
+        return (100.0f * f) / SIZE;
+    }
+
+    Process unloadLargest(ArrayList<Process> waitingQueue) {		//remove the largest progrcess from memory
+        Process q=null;
+        int max=0;
+        if(waitingQueue.size()==0) return null;
+        for(Process p:waitingQueue){
+            int size=0;
+            for(int i=0;i<SIZE;i++)
+                if(memory[i]!=null && memory[i].equals(p.name))
+                    size++;
+            if(size>max){
+                q=p;
+                max=size;
+            }
+        }
+        for(int i=0;i<SIZE;i++)
+            if(memory[i]!=null && q.name.equals(memory[i]))
+                memory[i]=null;
+        MultiProgrammingOS.showMessage(max + " MB of " + q.name + " removed from memory");
+       return q;
+        
+    }
+}
+
+
+
+______________________________________________________________________________________
+
+package multiprogrammingos;
+
+import java.util.ArrayList;
+
+/**
+ *
+ * @author vaio
+ */
+public class shortTermScheduler extends Thread {			//implement short term scheduler
+
+    private ArrayList<Process> readyQueue, terminateQuee, waitQueue, jobQueue, kiledQueue;
+    private Memory memory;
+    public boolean canTerminate;
+    private int remainingProc;
+    public shortTermScheduler(ArrayList<Process> rqueue, ArrayList<Process> tqueue, ArrayList<Process> jqueue, Memory mem) {		//inilize the object
+        readyQueue = rqueue;
+        memory = mem;
+        terminateQuee = tqueue;
+        jobQueue = jqueue;
+        canTerminate = false;
+        waitQueue = new ArrayList();
+        kiledQueue = new ArrayList();
+       remainingProc=JobLoader.totalProcesse;
+    }
+
+    public void run() {					//run the schd
+        try {
+            Process p;
+            IO io=null;
+            while (canTerminate == false || readyQueue.size() > 0 || waitQueue.size() > 0 || remainingProc>0) {		//while there are some active proc
+
+                if (readyQueue.size() > 0) {					//get first process from ready queue
+                    synchronized (readyQueue) {
+                        p = readyQueue.remove(0);
+                    }
+                    MultiProgrammingOS.showMessage(p.name + " reterived from Ready queue.");		//show a message
+                    if (p.requredMemory() > memory.getFreeSize()) {
+                        MultiProgrammingOS.showMessage("No enough memory. Required :" + p.requredMemory() + " MB   Available:" + memory.getFreeSize() + " . " + p.name + " added to Waiting queue.");
+                        synchronized (waitQueue) {			
+                            p.waitCount++;					//move process to waiting queue if its required memory is higher than free memory
+                            waitQueue.add(p);
+                        }
+                        continue;
+                    }
+                    updateMemory(p);			//update memory with the requested / release memory of process
+
+                    if (p.run()) {				//run process
+                        io=new IO(p, readyQueue);
+                        io.start();
+                    } else {
+                        terminateQuee.add(p);				//move the process the terminated list if it has finished
+                        memory.remove(p.name);
+                        remainingProc--;
+                        checkWaitingQueue();
+                        MultiProgrammingOS.showMessage(p.name + " added to Terminate queue.");
+                        p.finishType = "Terminated";
+                        p.finishTime = MultiProgrammingOS.getClock();
+                    }
+                } else {
+                    checkDeadLock();				//check for deadlock if nothing happens in current cycle
+                }
+                sleep(1);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        System.out.println("");
+        for(Process p: terminateQuee){
+            System.out.println(p.toString());		//show result
+        }
+         for(Process p: kiledQueue){
+            System.out.println(p.toString());
+        }
+        
+    }
+
+    void checkDeadLock() {											//check for deadlock and kill the bigest process if deadlock happen
+        if (readyQueue.size() == 0 && waitQueue.size() > 0) {
+            MultiProgrammingOS.showMessage("DeadLock Detected !!");
+            Process p = memory.unloadLargest(waitQueue);
+            MultiProgrammingOS.showMessage(p.name + " Killed.");
+            waitQueue.remove(p);
+            kiledQueue.add(p);
+            remainingProc--;
+            p.finishType = "Killd";
+            p.finishTime = MultiProgrammingOS.getClock();
+        }
+    }
+
+    void checkWaitingQueue() {					//check the waiting queue and move them to the ready queue if there is enough memory
+        Process p;
+        synchronized (waitQueue) {
+            for (int i = 0; i < waitQueue.size();) {
+                p = waitQueue.get(i);
+                if (p.requredMemory() < memory.getFreeSize()) {
+                    synchronized (readyQueue) {
+                        MultiProgrammingOS.showMessage(p.name + " moved from Waiting to Ready queue.");
+                        readyQueue.add(p);
+                        waitQueue.remove(i);
+                    }
+                } else {
+                    i++;
+                }
+            }
+        }
+    }
+
+    private void updateMemory(Process p) {			//update memory
+        if (p.requredMemory() == 0) {
+            return;
+        }
+        if (p.requredMemory() < 0) {		//remove memory from process
+            memory.remove(p.name, -p.requredMemory());
+        } else {
+            memory.put(p.name, p.requredMemory());		//add memory to the process
+        }
+        checkWaitingQueue();
+    }
+}
+
+
+
+______________________________________________________________
+
+package multiprogrammingos;
+
+import java.util.ArrayList;
+
+public class LongTermScheduler extends Thread {		//implement long term schduler
+
+    private ArrayList<Process> jobs, readyQueue;
+    private Memory memory;
+    public LongTermScheduler(ArrayList<Process> jobs, ArrayList<Process> queue,Memory mem) {		//initlize the object
+        this.jobs = jobs;
+        readyQueue = queue;
+        memory=mem;
+    }
+
+    public void run() {
+        try {
+            while (jobs.size()>0) {		//while there is some unloaded job to the memory
+                if(jobs.size()>0 && memory.fullPercentage()<=90 ){		//if memory if at least 90% free
+                    for(int i=0;i<jobs.size();){				//load process to memory
+                        if(Integer.parseInt(jobs.get(i).events.get(0).split(" ")[1])<=memory.getFreeSize()){
+                           memory.put(jobs.get(i).name,Integer.parseInt(jobs.get(i).events.get(0).split(" ")[1]));
+                           readyQueue.add(jobs.get(i));								//add process to ready queue
+                           jobs.get(i).loadTime=MultiProgrammingOS.getClock();
+                           jobs.remove(i);			//remove process from job list
+                        }
+                        else i++;
+                    }
+                }
+                sleep(100);
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+}
+
+
+________________________________________________________________________________________
+
+package multiprogrammingos;
+
+import java.util.ArrayList;
+
+public class IO extends Thread {		//implement io task of process
+     
+    Process proc;
+    ArrayList<Process> queue;
+    private static Object lock = new Object();		//lock for io device
+
+    ;
+    public IO(Process p, ArrayList q) {		//initlize the object
+        queue = q;
+        proc = p;
+    }
+
+    public void run() {
+
+        try {
+            synchronized (lock) {		//lock io device
+                proc.run();				//run io operation
+                synchronized (queue) {			//add process to queue
+                    queue.add(proc);
+                }
+               MultiProgrammingOS.showMessage(proc.name + " added to Ready queue.");		//show message
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+}
+
+_______________________________________________________________
+
+package multiprogrammingos;
+
+import java.util.ArrayList;
+
+public class MultiProgrammingOS {						//starting point of the program
+    private static long clock;
+    public static long getClock(){						//return the current clock of the os
+        return  System.currentTimeMillis()-clock;
+    }
+    public static void showMessage(String msg){			//show message in the screen
+        System.out.println(getClock()+" | "+msg);
+    }
+    
+    public static void main(String[] args) {
+        try {
+            clock= System.currentTimeMillis();		//create schedulers and queues
+            Memory memory = new Memory();
+            ArrayList<Process> jobs = JobLoader.load("data.txt");
+            ArrayList<Process> readyQueue = new ArrayList();
+             ArrayList<Process> terminateQueue = new ArrayList();
+
+            LongTermScheduler longscheduler = new LongTermScheduler(jobs, readyQueue, memory);
+            longscheduler.start();							//start long term schd
+            shortTermScheduler shortscheduler=new shortTermScheduler(readyQueue,terminateQueue,jobs,memory);
+            shortscheduler.start();							//start short term schd
+            longscheduler.join();
+            shortscheduler.canTerminate=true;
+             shortscheduler.join();						//wait to finish long and short term schd
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+    }
+}

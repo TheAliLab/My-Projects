@@ -1,7 +1,7 @@
 # My-Projects
 this repository contains most of my projects in my studying career as TXT files just to review it and help others.
 
-1- Datastructers Project: Using 
+1- Datastructers Project:  
 
 2- Algorithm Project: preformed the convex-hull algorithm with GUI
 

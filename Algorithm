@@ -1,0 +1,818 @@
+//All classes are written here and last class is Main
+//if you want only convex algorithm then look at class ( Point & QuickHullData ) 
+
+package quickhull;
+
+// point objects
+public class Point { 
+	
+	double x;
+	double y;
+	
+	//Setters & geters
+	public double getX() {
+		return x;
+	}
+	public void setX(double x) {
+		this.x = x;
+	}
+	public double getY() {
+		return y;
+	}
+	public void setY(double y) {
+		this.y = y;
+	}
+	
+	//Constructor
+	public Point(double x, double y) {
+		super();
+		this.x = x;
+		this.y = y;
+	}
+	 
+
+}
+_______________________________________________
+package quickhull;
+
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Polygon;
+import java.awt.RenderingHints;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+
+/**
+ * Display of the quick hull algorithm
+ */
+
+public class QuickHullGraph extends JPanel {
+
+  // the data
+  private final QuickHullData quickHulldata;
+
+  // attributes for the points the quick hull is being performed upon
+  private int pointWidth = 20;
+  private int pointHeight = 20;
+  private Color pointColor = Color.BLUE;
+  private Color pointOutlineColor = Color.BLACK;
+  private float pointStokeSize = 2f;
+
+  // colors relating to the different points
+  private Color extreme1Color = Color.RED;
+  private Color extreme2Color = Color.GREEN;
+  private Color extreme3Color = Color.CYAN;
+
+  // bounds of the quick hull result
+  private Color boundingColor = Color.RED;
+  private float boundingStrokeSize = 2f;
+
+  public QuickHullGraph(QuickHullData quickHulldata) {
+    super();
+    this.quickHulldata = quickHulldata;
+    setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.DARK_GRAY));
+  }
+
+  @Override
+  protected void paintComponent(Graphics g) {
+    super.paintComponent(g);
+
+    Graphics2D g2d = (Graphics2D) g;
+    g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+    List<Point> points = quickHulldata.getPoints();
+
+    Point ext1 = quickHulldata.getExtremePoint1();
+    Point ext2 = quickHulldata.getExtremePoint2();
+    Point ext3 = quickHulldata.getExtremePoint3();
+
+    // draw all the points, apply colors based on the "extreme points"
+    for (Point p : points) {
+
+      if (p.equals(ext1)) {
+        g2d.setColor(extreme1Color);
+      } else if (p.equals(ext2)) {
+        g2d.setColor(extreme2Color);
+      } else if (p.equals(ext3)) {
+        g2d.setColor(extreme3Color);
+      } else {
+        g2d.setColor(pointColor);
+      }
+
+      g2d.setStroke(new BasicStroke(1f));
+      g2d.fillOval(p.x - pointWidth / 2, p.y - pointHeight / 2, pointWidth, pointHeight);
+
+      g2d.setStroke(new BasicStroke(pointStokeSize));
+      g2d.setColor(pointOutlineColor);
+      g2d.drawOval(p.x - pointWidth / 2, p.y - pointHeight / 2, pointWidth, pointHeight);
+
+    }
+
+    // create and draw polygon of the quick hull results
+    Polygon polygon = new Polygon();
+
+    List<Point> bounding = quickHulldata.getBounding();
+    for (Point p : bounding) {
+      polygon.addPoint(p.x, p.y);
+    }
+
+    g2d.setStroke(new BasicStroke(boundingStrokeSize));
+    g2d.setColor(boundingColor);
+    g2d.draw(polygon);
+
+    // create and draw a polygone that shows the current iteration
+    polygon = new Polygon();
+
+    if (ext1 != null) {
+      polygon.addPoint(ext1.x, ext1.y);
+    }
+
+    if (ext2 != null) {
+      polygon.addPoint(ext2.x, ext2.y);
+    }
+
+    if (ext3 != null) {
+      polygon.addPoint(ext3.x, ext3.y);
+    }
+
+    g2d.setStroke(new BasicStroke(boundingStrokeSize, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL, 0.5f));
+    g2d.setColor(Color.LIGHT_GRAY);
+    g2d.draw(polygon);
+  }
+
+}
+
+
+
+__________________________________________________________________________________________________________
+
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
+
+
+public class QuickHullData {
+
+  // the recursion level we want to stop at
+  private int maxRecursionLevel = 0;
+
+  // the current level of recursion
+  private int currentRecursion = 0;
+
+  // the points we are performing the quick hull algorithm upon
+  private List<Point> points = new ArrayList<>();
+
+  // the area that is marked around the outer points according to the algorithm
+  private List<Point> bounding = new ArrayList<>(); // AKA convex
+
+  // left and right points
+  private Point extremePoint1;
+  private Point extremePoint2;
+
+  // the point at futhest distance
+  private Point extremePoint3;
+
+  // indicates if the algorithm ran fully before reaching the set max recursion
+  // level
+  private boolean finished;
+
+  public int getRecursion() {
+    return maxRecursionLevel;
+  }
+
+  public void setRecursion(int recursion) {
+    this.maxRecursionLevel = recursion;
+  }
+
+  public List<Point> getPoints() {
+    return points;
+  }
+
+  public void setPoints(List<Point> points) {
+    this.points = points;
+  }
+
+  public List<Point> getBounding() {
+    return bounding;
+  }
+
+  public void setBounding(List<Point> bounding) {
+    this.bounding = bounding;
+  }
+
+  public Point getExtremePoint1() {
+    return extremePoint1;
+  }
+
+  public void setExtremePoint1(Point extremePoint1) {
+    this.extremePoint1 = extremePoint1;
+  }
+
+  public Point getExtremePoint2() {
+    return extremePoint2;
+  }
+
+  public void setExtremePoint2(Point extremePoint2) {
+    this.extremePoint2 = extremePoint2;
+  }
+
+  public void setExtremePoint3(Point extremePoint3) {
+    this.extremePoint3 = extremePoint3;
+  }
+
+  public Point getExtremePoint3() {
+    return extremePoint3;
+  }
+
+  public boolean isFinished() {
+    return finished;
+  }
+
+  public void setFinished(boolean finished) {
+    this.finished = finished;
+  }
+
+  /**
+   * Perform the recursive quick hull algorithm stopping at the current max
+   * recursion level. This will increment the max recursion level by one.
+   */
+
+  public void nextRecursion() {
+    currentRecursion = 0;
+
+    // copy the points to new list as we remove points but still want to display
+    // all points
+    List<Point> copy = new ArrayList<>();
+    for (Point p : points) {
+      copy.add(p);
+    }
+
+    // set the bounding based on points passed back by the quick hull algorithm
+    setBounding(quickHull(copy));
+
+    maxRecursionLevel++;
+  }
+
+  //QuickHull Algorithm
+  private List<Point> quickHull(List<Point> points) {
+
+    bounding = new ArrayList<>();
+
+    // if there are 2 or less points then there is nothing to do so return
+    if (points.size() < 3)
+      return points;
+
+    // Initialise variables
+    int minPoint = -1;
+    int maxPoint = -1;
+    int minX = Integer.MAX_VALUE;
+    int maxX = Integer.MIN_VALUE;
+
+    // find the min and max points in terms of the x plane
+    for (int i = 0; i < points.size(); i++) {
+
+      if (points.get(i).x < minX) {
+        minX = points.get(i).x;
+        minPoint = i;
+      }
+
+      if (points.get(i).x > maxX) {
+        maxX = points.get(i).x;
+        maxPoint = i;
+      }
+
+    }
+
+    // add the min and max points to the bounding and remove from current set
+    Point p1 = points.get(minPoint);
+    Point p2 = points.get(maxPoint);
+
+    bounding.add(p1);
+    bounding.add(p2);
+
+    points.remove(p1);
+    points.remove(p2);
+
+    // create lists of left and right sets
+    ArrayList<Point> leftSet = new ArrayList<>();
+    ArrayList<Point> rightSet = new ArrayList<>();
+
+    // assign to left or right based on the min and max line
+    for (int i = 0; i < points.size(); i++) {
+
+      Point p = points.get(i);
+
+      if (pointLocation(p1, p2, p) == -1) {
+        leftSet.add(p);
+      } else if (pointLocation(p1, p2, p) == 1) {
+        rightSet.add(p);
+      }
+
+    }
+
+    // set the min and max that can be accessed for display
+    extremePoint1 = p1;
+    extremePoint2 = p2;
+
+    // if this is the first level then just show the min max line
+    if (maxRecursionLevel == 0)
+      return bounding;
+
+    // recurse onto the left set (upper hull)
+    boolean notEarlyExit = hullSet(p2, p1, leftSet);
+
+    // check if we have reached exit recursion level
+    if (currentRecursion == maxRecursionLevel)
+      return bounding;
+
+    // recurse onto the right set (upper hull)
+    notEarlyExit &= hullSet(p1, p2, rightSet);
+
+    // if the hullset calls were not exited early then we know the algorithm
+    // finished and this is the last step
+    if (notEarlyExit) {
+      finished = true;
+    }
+
+    // return the bounding
+    return bounding;
+  }
+
+  /**
+   * Returns the distance between points 3 and the segment p1 to p2.
+   */
+
+  public int distance(Point p1, Point p2, Point p3) {
+
+    int abX = p2.x - p1.x;
+    int abY = p2.y - p1.y;
+    int num = abX * (p1.y - p3.y) - abY * (p1.x - p3.x);
+
+    if (num < 0) {
+      num = -num;
+    }
+
+    return num;
+
+  }
+
+
+  public boolean hullSet(Point p1, Point p2, List<Point> set) {
+
+    int insertPosition = bounding.indexOf(p2);
+
+    if (set.size() == 0)
+      return true;
+
+    if (set.size() == 1) {
+
+      Point p = set.get(0);
+      set.remove(p);
+
+      bounding.add(insertPosition, p);
+
+      extremePoint1 = p1;
+      extremePoint2 = p2;
+      extremePoint3 = p;
+
+      return true;
+    }
+
+    int dist = Integer.MIN_VALUE;
+    int furthestPoint = -1;
+
+    for (int i = 0; i < set.size(); i++) {
+
+      Point p = set.get(i);
+
+      int distance = distance(p1, p2, p);
+
+      if (distance > dist) {
+        dist = distance;
+        furthestPoint = i;
+      }
+
+    }
+
+    Point p = set.get(furthestPoint);
+
+    set.remove(furthestPoint);
+
+    bounding.add(insertPosition, p);
+
+    // Determine who's to the left of AP
+
+    List<Point> upperPoints = new ArrayList<>();
+
+    for (int i = 0; i < set.size(); i++) {
+
+      Point m = set.get(i);
+
+      if (pointLocation(p1, p, m) == 1) {
+        upperPoints.add(m);
+      }
+
+    }
+
+    // Determine who's to the left of PB
+
+    List<Point> lowerPoints = new ArrayList<>();
+
+    for (int i = 0; i < set.size(); i++) {
+
+      Point m = set.get(i);
+
+      if (pointLocation(p, p2, m) == 1) {
+        lowerPoints.add(m);
+      }
+
+    }
+
+    extremePoint1 = p1;
+    extremePoint2 = p2;
+    extremePoint3 = p;
+
+    currentRecursion++;
+
+    if (currentRecursion == maxRecursionLevel)
+      return false;
+
+    hullSet(p1, p, upperPoints);
+
+    if (currentRecursion == maxRecursionLevel)
+      return false;
+
+    currentRecursion++;
+
+    if (currentRecursion == maxRecursionLevel)
+      return false;
+
+    hullSet(p, p2, lowerPoints);
+
+    return true;
+  }
+
+  /**
+   * returns whether a point lies on the left or right side of the line p1 to
+   * p2. If negative then it belongs to the right. Positive means left. If 0
+   * then it lies on the line
+   */
+
+  public int pointLocation(Point p1, Point p2, Point p3) {
+
+    int cp1 = (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
+
+    if (cp1 > 0)
+      return 1;
+
+    if (cp1 == 0)
+      return 0;
+
+    return -1;
+  }
+
+}
+
+________________________________________________________________________________________________
+
+package quickhull;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.Border;
+
+public class QuickHullDisplay extends JFrame {
+
+  /** Main method to show example of quick hull */
+  public static void main(String[] args) {
+    QuickHullDisplay display = new QuickHullDisplay();
+
+    display.setSize(1100, 750);
+    display.setLocationRelativeTo(null);
+
+    //Points in Diagram 
+    List<Point> points = new ArrayList<>();
+  
+    //Approx points from PDF to get a convex hull
+    points.add(new Point(70, 600));
+    points.add(new Point(95, 620));
+    points.add(new Point(200, 670));
+    points.add(new Point(660, 660));
+    points.add(new Point(700, 660));
+    points.add(new Point(730, 370));
+    points.add(new Point(715, 320));
+    points.add(new Point(660, 220));
+    points.add(new Point(500, 150));
+    points.add(new Point(420, 130));
+    points.add(new Point(420, 130));
+    points.add(new Point(220, 130));
+    points.add(new Point(50, 190));
+    points.add(new Point(55, 350));
+    
+    //Random points in between 
+    points.add(new Point(70, 360));
+    points.add(new Point(80, 330));
+    points.add(new Point(60, 300));
+    points.add(new Point(75, 280));
+    points.add(new Point(90, 350));
+    points.add(new Point(415, 170));
+    points.add(new Point(295, 160));
+    points.add(new Point(345, 190));
+    points.add(new Point(190, 150));
+    points.add(new Point(180, 400));
+    points.add(new Point(210, 500));
+    points.add(new Point(240, 450));
+    points.add(new Point(250, 400));
+    points.add(new Point(395, 260));
+    points.add(new Point(390, 230));
+    points.add(new Point(385, 300));
+    points.add(new Point(520, 222));
+    points.add(new Point(485, 350));
+    points.add(new Point(495, 350));
+    points.add(new Point(545, 300));
+    points.add(new Point(390, 450));
+    points.add(new Point(380, 400));
+    points.add(new Point(410, 500));
+    points.add(new Point(440, 450));
+    points.add(new Point(450, 400));
+    points.add(new Point(220, 600));
+    points.add(new Point(320, 600));
+    points.add(new Point(420, 610));
+    points.add(new Point(520, 600));
+    points.add(new Point(620, 620));
+    points.add(new Point(570, 600));
+    points.add(new Point(550, 600));
+    points.add(new Point(480, 600));
+    points.add(new Point(620, 500));
+    points.add(new Point(570, 450));
+    points.add(new Point(550, 420));
+    points.add(new Point(480, 400));
+    points.add(new Point(620, 500));
+    points.add(new Point(680, 220));
+    points.add(new Point(690, 250));
+    points.add(new Point(650, 200));
+    points.add(new Point(580, 270));
+    
+
+ 
+    display.quickHullData.setPoints(points);
+
+    display.setVisible(true);
+  }
+
+  // the data for performing the quick hull
+  private QuickHullData quickHullData;
+
+  // the panel for displaying the results
+  private QuickHullGraph quickHullGraph;
+
+  // components to show the values of the points and recursion level
+  private JTextField recursionTextField;
+  private JTextField extremePoint1TextField;
+  private JTextField extremePoint2TextField;
+  private JTextField intermediatryPointsTextField;
+
+  // buttons to move forward and reset
+  private JButton nextButton;
+  private JButton resetButton;
+
+  /**
+   * Frame for showing quick hull algorithm
+   */
+
+  public QuickHullDisplay() {
+    super("Quick Hull");
+
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    quickHullData = new QuickHullData();
+
+    initGui();
+    updateGui();
+  }
+
+  /**
+   * Create the gui and all components
+   */
+
+  private void initGui() {
+
+    quickHullGraph = new QuickHullGraph(quickHullData);
+
+    recursionTextField = new JTextField();
+    recursionTextField.setPreferredSize(new Dimension(150, recursionTextField.getPreferredSize().height));
+    recursionTextField.setEditable(false);
+
+    extremePoint1TextField = new JTextField();
+    extremePoint1TextField.setEditable(false);
+
+    extremePoint2TextField = new JTextField();
+    extremePoint2TextField.setEditable(false);
+
+    intermediatryPointsTextField = new JTextField();
+    intermediatryPointsTextField.setEditable(false);
+
+    JPanel rightPanel = createRightPanel();
+
+    JPanel centerPanel = new JPanel(new BorderLayout(5, 5));
+    centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+    JPanel wrapper = new JPanel(new BorderLayout(5, 5));
+
+    Border rightPanelBorder = BorderFactory.createCompoundBorder(
+        BorderFactory.createMatteBorder(1, 1, 1, 1, Color.DARK_GRAY), BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+    wrapper.setBorder(rightPanelBorder);
+    wrapper.add(rightPanel, BorderLayout.NORTH);
+
+    centerPanel.add(wrapper, BorderLayout.EAST);
+    centerPanel.add(quickHullGraph, BorderLayout.CENTER);
+
+    setLayout(new BorderLayout(5, 5));
+    add(centerPanel, BorderLayout.CENTER);
+  }
+
+  /**
+   * Returns the panel that appears on the right that has the components for
+   * display and interaction
+   */
+
+  private JPanel createRightPanel() {
+
+    JPanel panel = new JPanel(new GridBagLayout());
+
+    nextButton = new JButton(new AbstractAction("Next") {
+
+      @Override
+      public void actionPerformed(ActionEvent arg0) {
+        nextIteration();
+      }
+    });
+
+    resetButton = new JButton(new AbstractAction("Reset") {
+
+      @Override
+      public void actionPerformed(ActionEvent arg0) {
+        reset();
+      }
+    });
+
+    GridBagConstraints bag = new GridBagConstraints();
+    bag.fill = GridBagConstraints.HORIZONTAL;
+    bag.insets = new Insets(5, 5, 5, 5);
+
+    // place components
+    bag.weightx = 0;
+    bag.weighty = 0;
+    bag.gridx = 0;
+    bag.gridy = 0;
+    panel.add(new JLabel("Extreme Point 1:"), bag);
+
+    bag.gridx = 1;
+    bag.weightx = 1;
+    panel.add(extremePoint1TextField, bag);
+
+    bag.gridy = 1;
+    bag.gridx = 0;
+    bag.weightx = 0;
+    panel.add(new JLabel("Extreme Point 2:"), bag);
+
+    bag.gridx = 1;
+    bag.weightx = 1;
+    panel.add(extremePoint2TextField, bag);
+
+    bag.gridy = 2;
+    bag.gridx = 0;
+    bag.weightx = 0;
+    panel.add(new JLabel("Intermediatry Point:"), bag);
+
+    bag.gridx = 1;
+    bag.weightx = 1;
+    panel.add(intermediatryPointsTextField, bag);
+
+    bag.gridy = 3;
+    bag.gridx = 0;
+    bag.weightx = 0;
+    panel.add(new JLabel("Recursion:"), bag);
+
+    bag.gridx = 1;
+    bag.weightx = 1;
+    panel.add(recursionTextField, bag);
+
+    bag.gridy = 4;
+    bag.gridx = 0;
+    bag.weightx = 1;
+    bag.gridwidth = 2;
+    panel.add(nextButton, bag);
+
+    bag.gridy = 5;
+    bag.gridx = 0;
+    bag.weightx = 1;
+    bag.gridwidth = 2;
+    panel.add(resetButton, bag);
+
+    return panel;
+  }
+
+  /**
+   * Reset the display and algorithm to starting conditionsF
+   */
+
+  protected void reset() {
+
+    nextButton.setEnabled(true);
+
+    quickHullData.setFinished(false);
+    quickHullData.setRecursion(0);
+    quickHullData.setBounding(new ArrayList<>());
+    quickHullData.setExtremePoint1(null);
+    quickHullData.setExtremePoint2(null);
+    quickHullData.setExtremePoint3(null);
+
+    updateGui();
+    repaint();
+  }
+
+  /**
+   * Move the quick hull forward and update gui accordingly
+   */
+
+  protected void nextIteration() {
+
+    quickHullData.nextRecursion();
+
+    if (quickHullData.isFinished()) {
+      nextButton.setEnabled(false);
+      quickHullData.setExtremePoint1(null);
+      quickHullData.setExtremePoint2(null);
+      quickHullData.setExtremePoint3(null);
+    }
+
+    updateGui();
+
+    repaint();
+  }
+
+  /**
+   * Update the display components to reflect the current status of the quick
+   * hull
+   */
+
+  private void updateGui() {
+
+    if (quickHullData.getExtremePoint1() != null) {
+      extremePoint1TextField.setText(pointToString(quickHullData.getExtremePoint1()));
+    } else {
+      extremePoint1TextField.setText("");
+    }
+
+    if (quickHullData.getExtremePoint2() != null) {
+      extremePoint2TextField.setText(pointToString(quickHullData.getExtremePoint2()));
+    } else {
+      extremePoint2TextField.setText("");
+    }
+
+    if (quickHullData.getExtremePoint3() != null) {
+      intermediatryPointsTextField.setText(pointToString(quickHullData.getExtremePoint3()));
+    } else {
+      intermediatryPointsTextField.setText("");
+    }
+
+    if (quickHullData.isFinished()) {
+      extremePoint1TextField.setText("Finished");
+      extremePoint2TextField.setText("Finished");
+      intermediatryPointsTextField.setText("Finished");
+    }
+
+    recursionTextField.setText(quickHullData.getRecursion() + "");
+  }
+
+  /**
+   * returns a text version of the point passed in "x, y"
+   */
+  private String pointToString(Point p) {
+    return p.x + ", " + p.y;
+  }
+
+}
+

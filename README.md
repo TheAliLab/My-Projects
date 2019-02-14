@@ -1,5 +1,5 @@
 # My-Projects
-This repository contains most of my projects as TXT files, please look at my project describtion to check if it's what you're looking for.
+This repository contains most of my projects as TXT files, please look at my project description to check if it's what you're looking for.
 
 1- Data-Structers Project:  Matching DNA pairs (2 starnds of DNA ) and compute simularity 
 

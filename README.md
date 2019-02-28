@@ -9,7 +9,6 @@ This repository contains most of my projects as TXT files, please look at my pro
 
 4- Ai Project: solving the cross-river puzzle using breadth-first-search approach.
 
-5- Twitter Arabic user classification: Classyfing twitter users by machine learing approach while using java to pre-process raw data 
-   and then using weka to build the model and choose the most effective features. (source code will be uploaded soon).
+5- Twitter Arabic user classification(student | Non-student): Classyfing twitter users by machine learing approach while using java to pre-process raw data and then using weka to build the model and choose the most effective features. (source code will be uploaded soon).
 
 6- Database Project: creating my database by using Mysql and connecting it using java + GUI.

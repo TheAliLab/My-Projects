@@ -1,6 +1,6 @@
 //All classes are written here and last class is Main.
 
-package multiprogrammingos;
+
 import java.util.ArrayList;
 
 public class Process {					//class of each process
@@ -66,7 +66,6 @@ public class Process {					//class of each process
 
 _____________________________________________________________
 
-package multiprogrammingos;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -117,7 +116,6 @@ public class JobLoader {
 
 ____________________________________________________________________________
 
-package multiprogrammingos;
 
 import java.util.ArrayList;
 
@@ -214,14 +212,10 @@ public class Memory {		//implement memory object
 
 ______________________________________________________________________________________
 
-package multiprogrammingos;
+
 
 import java.util.ArrayList;
 
-/**
- *
- * @author vaio
- */
 public class shortTermScheduler extends Thread {			//implement short term scheduler
 
     private ArrayList<Process> readyQueue, terminateQuee, waitQueue, jobQueue, kiledQueue;
@@ -338,8 +332,6 @@ public class shortTermScheduler extends Thread {			//implement short term schedu
 
 ______________________________________________________________
 
-package multiprogrammingos;
-
 import java.util.ArrayList;
 
 public class LongTermScheduler extends Thread {		//implement long term schduler
@@ -377,7 +369,6 @@ public class LongTermScheduler extends Thread {		//implement long term schduler
 
 ________________________________________________________________________________________
 
-package multiprogrammingos;
 
 import java.util.ArrayList;
 
@@ -410,8 +401,6 @@ public class IO extends Thread {		//implement io task of process
 }
 
 _______________________________________________________________
-
-package multiprogrammingos;
 
 import java.util.ArrayList;
 

@@ -1,6 +1,5 @@
 //Must import Twitter4j library
 //This Class contains the exctracting of a User with the Tweets and preprocessing the text 
-//Also calculatin these features ( Most quarter, Bio occupation, Most day, context words)
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -41,23 +40,25 @@ public class retriveTweets {
 	//First Search the user
 	public static void usersprocess() {
 
-        //Connect to DB
+        
 		try {
-			  String myDriver = "";
+		      //Connect to DB
+		      String myDriver = "";
 		      String myUrl = "";
 		      Class.forName(myDriver);
 		      Connection conn = DriverManager.getConnection(myUrl, "", ""); // insert username and password
-			  System.out.println("connected");
+	              System.out.println("connected");
 
 		
-		  for(int i=1;i<Number_users;i++) {
+	for(int i=1;i<Number_users;i++) {
 			 
 		PreparedStatement st = conn.prepareStatement("SELECT description FROM users where db_id="+i+";");
 		
 	    ResultSet r1=st.executeQuery();
 	    String temp="null";
 	    while(r1.next()) {
-	        temp = r1.getString("description");
+	    temp = r1.getString("description");
+	    
 	    }
 	    System.out.print("before : ");
 	    System.out.println(temp);
@@ -85,12 +86,12 @@ public class retriveTweets {
 	public static void tweetprocess() {
 
 		try {
-
-			  String myDriver = "";
+                      //Connect to DB
+		      String myDriver = "";
 		      String myUrl = "";
 		      Class.forName(myDriver);
 		      Connection conn = DriverManager.getConnection(myUrl, "", ""); // insert username and password
-			  System.out.println("connected");
+		      System.out.println("connected");
 
 		
 		
@@ -238,7 +239,7 @@ public class retriveTweets {
 		      String myUrl = "";
 		      Class.forName(myDriver);
 		      Connection conn = DriverManager.getConnection(myUrl, "", ""); // insert username and password
-			  System.out.println("connected"); 
+		      System.out.println("connected"); 
 		
 		ConfigurationBuilder cb = new ConfigurationBuilder();
 		cb.setDebugEnabled(true)
@@ -371,11 +372,11 @@ public class retriveTweets {
 		
 		try {
             //Connect to DB
-			String myDriver = "";
-		    String myUrl = "";
-		    Class.forName(myDriver);
-		    Connection conn = DriverManager.getConnection(myUrl, "", "");
-			System.out.println("connected");
+		      String myDriver = "";
+		      String myUrl = "";
+		      Class.forName(myDriver);
+		      Connection conn = DriverManager.getConnection(myUrl, "", ""); // insert username and password
+		      System.out.println("connected");
 
 		
 		
@@ -522,12 +523,12 @@ public class retriveTweets {
 
 			{
 				try {
-					   //Connect to DB
-			           String myDriver = "";
-		               String myUrl = "";
-		               Class.forName(myDriver);
-		               Connection conn = DriverManager.getConnection(myUrl, "", "");
-			           System.out.println("connected");
+				//Connect to DB
+		      String myDriver = "";
+		      String myUrl = "";
+		      Class.forName(myDriver);
+		      Connection conn = DriverManager.getConnection(myUrl, "", ""); // insert username and password
+		      System.out.println("connected");
 
 					for (int i = 0; i < num; i++) {
 
@@ -692,11 +693,11 @@ public class retriveTweets {
 			try {
 
 				//Connect to DB
-			          String myDriver = "";
-		              String myUrl = "";
-		              Class.forName(myDriver);
-		              Connection conn = DriverManager.getConnection(myUrl, "", "");
-			          System.out.println("connected");
+		      String myDriver = "";
+		      String myUrl = "";
+		      Class.forName(myDriver);
+		      Connection conn = DriverManager.getConnection(myUrl, "", ""); // insert username and password
+		      System.out.println("connected");
 
 			
 			

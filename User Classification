@@ -1,0 +1,924 @@
+//Must import Twitter4j library
+//This Class contains the exctracting of a User with the Tweets and preprocessing the text 
+//Also calculatin these features ( Most quarter, Bio occupation, Most day, context words)
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+import twitter4j.IDs;
+import twitter4j.PagableResponseList;
+import twitter4j.Paging;
+import twitter4j.Status;
+import twitter4j.Twitter;
+import twitter4j.TwitterFactory;
+import twitter4j.User;
+import twitter4j.conf.ConfigurationBuilder;
+
+
+
+public class retriveTweets {
+	
+	static int number=0;
+    Static int Number_users=0; //Count Your users 
+	
+	//First Search the user
+	public static void usersprocess() {
+
+        //Connect to DB
+		try {
+			  String myDriver = "";
+		      String myUrl = "";
+		      Class.forName(myDriver);
+		      Connection conn = DriverManager.getConnection(myUrl, "", ""); // insert username and password
+			  System.out.println("connected");
+
+		
+		  for(int i=1;i<Number_users;i++) {
+			 
+		PreparedStatement st = conn.prepareStatement("SELECT description FROM users where db_id="+i+";");
+		
+	    ResultSet r1=st.executeQuery();
+	    String temp="null";
+	    while(r1.next()) {
+	        temp = r1.getString("description");
+	    }
+	    System.out.print("before : ");
+	    System.out.println(temp);
+
+	    
+	    temp = process(temp);
+	    System.out.print("after  : ");
+	    System.out.println(temp);
+
+		PreparedStatement ws = conn.prepareStatement("");
+		ws=conn.prepareStatement("UPDATE users SET description='"+temp+"' where db_id="+i+";");		
+		ws.execute();
+	
+	    
+		
+		
+		  }//end loop
+		  
+		}catch (Exception ignore) {}
+		
+	}//end of usersprocess
+	
+	
+		//Second Tweets
+	public static void tweetprocess() {
+
+		try {
+
+			  String myDriver = "";
+		      String myUrl = "";
+		      Class.forName(myDriver);
+		      Connection conn = DriverManager.getConnection(myUrl, "", ""); // insert username and password
+			  System.out.println("connected");
+
+		
+		
+		
+		while(true) {
+		  for(int i=0;i<num;i++) {
+		System.out.println(i);//To check it's inserting 
+		PreparedStatement st = conn.prepareStatement("SELECT  text  FROM tweets where db_id="+i+";");
+		
+		
+	    ResultSet r1=st.executeQuery();
+	    String t="null";
+	    while(r1.next()) {
+	        t = r1.getString("text");
+	    }	    
+		t=process(t);
+	
+		PreparedStatement ws = conn.prepareStatement("");
+		ws=conn.prepareStatement("UPDATE  tweets  SET text='"+t+"' where db_id="+i+";");
+		
+		ws.execute();
+	    
+		
+		  }
+		  }//end for
+		}catch (Exception e) {System.out.println(e.getMessage());}
+		
+	}//end method tweetprocess
+	
+	
+	//Replacing forms of the main form of a letter
+	public static char a='إ';
+	public static char b= 'آ';
+	public static char c= 'أ';
+	public static char d= 'ء'; 
+	public static char w='ؤ'; 
+	public static char y='ئ'; 
+	public static char t='ة';
+	
+	//handling prefixs
+	public static String st= "students";
+	public static String f1= "فالكليه";
+	public static String f2= "بالكليه";
+	public static String f3= "للكليه";
+	
+	
+	
+	//Main Method to preprocess the text 
+	public static String process(String s) {
+
+
+		String test = s;
+		
+		//Start replacing with main form
+		test=test.replace(a, 'ا');
+		test=test.replace(b, 'ا');
+		test=test.replace(c, 'ا');
+		test=test.replace(d, 'ا');
+		test=test.replace(t, 'ه');
+		test=test.replace(w, 'و');
+		test=test.replace(y, 'ي');
+		test=test.replaceAll(st, "طالب");
+		test=test.replaceAll(f1, "كليه");
+		test=test.replaceAll(f2, "كليه");
+		test=test.replaceAll(f3, "كليه");
+		test = test.replaceAll("(ّ)?(َ)?(ً)?(ُ)?(ٌ)?(ِ)?(ٍ)?(~)?(ْ)?", ""); //Arabic diacritics 
+		
+		//removing single and double quotes 
+		char t1='\'';
+		test=test.replace(t1, ' ');
+		char t2='\"';
+		test=test.replace(t2, ' ');
+		char t3='\\';
+		test=test.replace(t3, ' ');
+				
+		
+		//list for جامعه
+		String l1[]= {"فالكلية","بالكلية","للكلية","جامعتنا","جامعتكم" ,"للجامعه","فالجامعه","بالجامعه","الجامعه","كليتنا","كليتكم","الكلية","الكليه","كليه","كلية"};
+        for(int i=0;i<l1.length;i++) {
+        test=test.replaceAll(l1[i], "جامعه");
+        }
+		//System.out.println(test);
+		
+        //list for طالب
+		String l2[]= {"طلاب","طالبات","طالبه","student","studying"};
+		for(int i=0;i<l2.length;i++) {
+			
+		test=test.replaceAll(l2[i], "طالب");
+		}
+		
+		//list for اختبار
+		String l3[]= {"فاختبار","باختبار", "اختبرتو","اختبرنا","اختبارات" ,"اختبرت", "كويزات" , "كويزين" ,"كويز" , "امتحانات", "امتحان" ,"الفاينل","فاينلز", "الاختبار" ,"للاختبار" , "اختبارين" , "فاينلين" , "فاينلات" , "فاينل"};
+		for(int i=0;i<l3.length;i++) {
+		test=test.replaceAll(l3[i], "اختبار");
+		}	
+
+
+		//list for keywords about student
+		String l4[]={"مشروع تخرج","ترم صيفي","كلاسكم","كلاسات","الكلاس","كلاسي","كلاس","حذفت الترم","حذفت ترم","حذف الترم","حذف ترم","اعتذار عن الترم" ,"اعتذار عن ترم"," ترم ","الجداول","الجدول حقي","جدولي"};
+		for(int i=0;i<l4.length;i++) {
+			test=test.replaceAll(l4[i], "محاضره");
+			//write if l4 is there then 1;
+			}		
+		
+		
+		 //list for موظف
+		String l5[]= {"اعلامي"  ,"المدير", "مدير" , "شوون طلاب" , "مصور" , "صحفي" ,"الرييس", "رييس" , "موسس " , "داعيه" , "عميد" , "صحافي" , "طبيب", "طبيبه" , "هاكر اخلاقي" 
+                , "عضو" , "مستشار" , "مقدم" , "بروفيسور" , "استاذ مشارك" , "محاضر" , "استشاري" , "باحث" , "وكيل" , "طيار" , "طياره" , "استاذ" ,"مدرب" , "لاعب" ,"مخرج" 
+                , "منتج" ,"امير" , "عاطل" , "اخصايي" ,"كاتب" , "ممثل" ,"مشرف" , "خطيب" , "امام","مخرجه" , "مذيع","مذيعه" , "معد","ماستر","ماجسيتير", "دكتوراه" , "phd" ,"PhD" ,"Phd" , "PHD" , "Ph.D" , "دكتوراه" , "MSc" , "master" ," MBA "," M.B.A. ", //degree
+                "President" , "CEO" , "ceo" , "doc" ,"doctor" , "Journalist" , };
+		for(int i=0;i<l5.length;i++) {
+			
+		test=test.replaceAll(l5[i], "موظف");
+		}	
+		
+		
+		//Unused lists for university  subjects
+		
+//		String l6[]={"عال","نال","نهج","هال","هاب","كيح","دعو","سيم","تال"
+//			       ,"قصد","احص","قرأ","نجل","وقا","ادا","ريض","كيم","فيز","مكت","جغر","ترب","سلم","ترخ"
+//			       ,"همس","نفس","انجل"," نما ","درع","كمي","مال","ثقف","هعم","همم","كهر","همد","هكم","تكل","شعع","دوا","أسر","طبس","نسا","اسر","غذت","وقن","هزر"};
+//		
+
+		//list for university names
+		
+//		String l5[]={"kau","imamu","uqu","kku","iau","pnu","psu","kfupm","ksu","kfu","jazanu"};
+//		
+//		for(int i=0;i<l5.length;i++) {
+//			test=test.replaceAll(l5[i], "");
+//			//write if l4 is there then 1;
+//			}		
+		return test;
+	}
+	
+	
+	//Method for inserting into DB
+	public static  void retrive(String profile) {
+	
+		boolean debug=true;
+
+	      try {
+
+              //Connect to DB
+		      String myDriver = "";
+		      String myUrl = "";
+		      Class.forName(myDriver);
+		      Connection conn = DriverManager.getConnection(myUrl, "", ""); // insert username and password
+			  System.out.println("connected"); 
+		
+		ConfigurationBuilder cb = new ConfigurationBuilder();
+		cb.setDebugEnabled(true)
+		
+		  //insert Twitter information
+		  .setOAuthConsumerKey("")
+		  .setOAuthConsumerSecret("")
+		  .setOAuthAccessToken("")
+		  .setOAuthAccessTokenSecret("");
+		
+		TwitterFactory tf = new TwitterFactory(cb.build());
+		Twitter twitter = tf.getInstance();
+		System.out.println("connected to DB and API");
+
+	 	    
+	 	  DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+	 	  LocalDateTime now = LocalDateTime.now();
+	 	  
+	 	    int num=0;
+		    User user = twitter.showUser(profile);
+		    
+	 	    PreparedStatement p;
+		    //write method for preprocessing data 
+	 		  p = (PreparedStatement) conn.prepareStatement(
+	 		  "insert IGNORE into users(id ,followers_count,friends_count,statuses_count,"
+	 		  + "favourites_count,description,created_at,location,lang,name,screen_name,"
+	 		  + "url,protected,verified,listed_count,utc_offset,time_zone,geo_enabled,"
+	 		  + "contributors_enabled,last_updated,student) "
+	 		  + "values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+	 		  p.setLong(1, user.getId());
+	 		  p.setInt(2, user.getFollowersCount());
+	 		  p.setInt(3, user.getFriendsCount());
+	 		  p.setInt(4, user.getStatusesCount());
+	 		  p.setInt(5, user.getFavouritesCount());
+	 		  p.setString(6, user.getDescription());
+	 		  p.setString(7, user.getCreatedAt().toString());
+	 		  p.setString(8, user.getLocation());
+	 		  p.setString(9, user.getLang());
+	 		  p.setString(10,user.getName());
+	 		  p.setString(11, user.getScreenName());
+	 		  p.setString(12, user.getURL());
+	 		  p.setBoolean(13, user.isProtected());
+	 		  p.setBoolean(14, user.isVerified());
+	 		  p.setInt(15, user.getListedCount());
+	 		  p.setInt(16, user.getUtcOffset());
+	 		  p.setString(17, (user.getTimeZone()));
+	 		  p.setBoolean(18, user.isGeoEnabled());
+	 		  p.setBoolean(19, user.isContributorsEnabled());
+	 		  p.setString(20,dtf.format(now));
+	 		  p.setString(21,"yes");
+	 		  p.execute(); 
+		 
+	 		  System.out.print ("profile name:"+profile+" profile added ");
+
+	 	    
+	 		  
+	 		  
+	 	    
+	 		  PreparedStatement t;
+
+	 		  	List statuses = new ArrayList();
+	 		  	int pageno = 1;
+
+			    while (true) {
+			    	
+            	    int size = statuses.size(); 
+            	    Paging page = new Paging(pageno++, 100);
+            	    statuses.addAll(twitter.getUserTimeline(profile, page));
+            	    if (statuses.size() == size)
+            	      break;
+            	  } 
+			    
+			    
+	              System.out.print(" and has tweets: "+statuses.size());
+
+			    
+			    
+		 		Status status;
+
+                //Inserting Tweets of user into DB
+			    for (int i=0 ; i<statuses.size();i++) {
+		 		 t = (PreparedStatement) conn.prepareStatement("INSERT IGNORE  INTO tweets"
+		 		 		+ " ( id , retweet_count , favorite_count , created_at , source "
+		 		 		+ ", possibly_sensitive , text , place_id , users_id "
+		 		 		+ ", in_reply_to_status_id , quoted_status_id , is_quote_status , quote_count , reply_count "
+		 		 		+ ", favorited , retweeted , lang ,"
+		 		 		+ " in_reply_to_screen_name , url_in_tweet , Number_Hashtag , URLs_Number , hour_of_Tweet , Day_of_Tweet,student)"
+		 		 		+ "values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)") ;
+
+		 		 status=(Status) statuses.get(i);
+		 		
+		 		  t.setLong(1, status.getId());
+		 		  t.setInt(2, status.getRetweetCount());
+		 		  t.setInt(3, status.getFavoriteCount());
+		 		  t.setString(4, status.getCreatedAt().toString());
+		 		  t.setString(5, status.getSource());
+		 		  t.setBoolean(6, status.isPossiblySensitive());
+		 		  t.setString(7, status.getText());
+		 		  t.setString(8,"null" );
+		 		  t.setLong(9, user.getId());
+		 		  t.setLong(10, 0);
+		 		  t.setLong(11, 0);
+		 		  t.setString(12,"null" );
+		 		  t.setString(13, "null");
+		 		  t.setLong(14, 0); 		 		  
+		 		  t.setBoolean(15, status.isFavorited()); 
+		 		  t.setBoolean(16, status.isRetweeted()); 		 		
+		 		  t.setString(17,status.getLang());
+		 		  t.setString(18, status.getInReplyToScreenName());
+		 		  t.setString(19, status.getURLEntities().toString());
+		 		  t.setInt(20,status.getHashtagEntities().length);
+		 		  t.setInt(21,status.getURLEntities().length);
+		 		  t.setInt(22,status.getCreatedAt().getHours());
+		 		  t.setInt(23,status.getCreatedAt().getDay());
+		 		  t.setString(24,"yes");
+		 		  t.execute(); 
+			    } System.out.println(", all tweets added");
+
+	      } catch(Exception ignore ) {
+	 	    	System.out.println("error");
+	 	    	System.out.println(ignore.getMessage());
+		  
+		      }
+
+	}// end of retrive
+
+
+    //Time feature
+	public static void time() {
+		
+		try {
+            //Connect to DB
+			String myDriver = "";
+		    String myUrl = "";
+		    Class.forName(myDriver);
+		    Connection conn = DriverManager.getConnection(myUrl, "", "");
+			System.out.println("connected");
+
+		
+		
+		//643796 number of tweets 545188
+		  for(int i=1745245;i<1793296;i++) {
+			  System.out.println("");
+		PreparedStatement st = conn.prepareStatement("SELECT text,id,users_id,hour_of_Tweet FROM tweets where db_id="+i+" and processed='no';");
+		
+	    ResultSet r1=st.executeQuery();
+	    long user_id=0;
+	    long tweets_id=0;
+	    int hour=-1;
+	    String text="";
+	    
+	    while(r1.next()) {
+	    	user_id = r1.getLong("users_id");//save tweet_text to t
+	    	hour=r1.getInt("hour_of_Tweet");
+	    	tweets_id=r1.getLong("id");
+	    	text=r1.getString("text");   	
+	    }   
+	    
+	    //process tweet_text
+	    if(!text.equalsIgnoreCase("")) {
+	    	text=process(text);
+	    	PreparedStatement ws=conn.prepareStatement("UPDATE  tweets  SET text='"+text+"' where id="+tweets_id+";");
+			ws.execute();
+
+			//to update keyword_list
+			if(text.contains("محاضره")||text.contains("اختبار")||text.contains("جامعه")||text.contains("طالب")) {
+		    	PreparedStatement p1=conn.prepareStatement("UPDATE  tweets  SET keyword_list='1' where id="+tweets_id+";");
+				p1.execute();
+			}else {
+		    	PreparedStatement p1=conn.prepareStatement("UPDATE  tweets  SET keyword_list='0' where id="+tweets_id+";");
+				p1.execute();
+			}
+			System.out.println("text processed");
+	    }
+		    
+	    System.out.print("db_id= " +i+ " ,user id = "+user_id +", hour "+ hour+", tweet id ="+tweets_id+"");
+	    
+		PreparedStatement su = conn.prepareStatement("SELECT time_q1,time_q2,time_q3,time_q4 FROM users where id='"+user_id+"';");
+		
+		if(user_id==0 ||hour ==-1) {
+    		System.out.println("** error ** int = "+i);
+    	}else {	
+	    ResultSet r2=su.executeQuery();
+	    int q1=0,q2=0,q3=0,q4=0;
+	    r2.next();
+	    	q1 = r2.getInt("time_q1");
+	    	q2 = r2.getInt("time_q2");
+	    	q3 = r2.getInt("time_q3");
+	    	q4 = r2.getInt("time_q4");
+	    	
+	    
+		PreparedStatement ws = conn.prepareStatement("");
+	    if(hour==0||hour==1||hour==2||hour==3||hour==4||hour==5) {
+	    	q1=q1+1;
+		ws=conn.prepareStatement("UPDATE  users  SET time_q1='"+q1+"' where id="+user_id+";");
+	    }	    
+	    if(hour==6||hour==7||hour==8||hour==9||hour==10||hour==11) {
+	    	q2=q2+1;
+		ws=conn.prepareStatement("UPDATE  users  SET time_q2='"+q2+"' where id="+user_id+";");
+	    }	    
+	    if(hour==12||hour==13||hour==14||hour==15||hour==16||hour==17) {
+	    	q3=q3+1;
+		ws=conn.prepareStatement("UPDATE  users  SET time_q3='"+q3+"' where id="+user_id+";");
+	    }
+	    if(hour==18||hour==19||hour==20||hour==21||hour==22||hour==23) {
+	    	q4=q4+1;
+		ws=conn.prepareStatement("UPDATE  users  SET time_q4='"+q4+"' where id="+user_id+";");
+	    }
+		ws.execute();
+		}
+		
+		
+		PreparedStatement s1 = conn.prepareStatement("UPDATE  tweets  SET processed='yes' where id="+tweets_id+";");
+		s1.execute();
+		System.out.print("tweet processed=yes");
+		  
+		  }//end for
+		}catch (Exception e) {System.out.println(e.getMessage());}
+		
+		
+		
+		
+	}
+	
+	
+	 public static void friend_list() {
+		 try {
+
+				ConfigurationBuilder cb = new ConfigurationBuilder();
+				cb.setDebugEnabled(true)
+				//Twitter key
+				  .setOAuthConsumerKey("")
+				  .setOAuthConsumerSecret("")
+				  .setOAuthAccessToken("")
+				  .setOAuthAccessTokenSecret("");
+				
+				
+				
+				
+				String profile="";
+				int j=0;
+				TwitterFactory tf = new TwitterFactory(cb.build());
+				Twitter twitter = tf.getInstance();
+				System.out.println("connected to DB and API");
+
+			    User user = twitter.showUser("yossef619");
+
+				long lCursor = -1;
+				IDs friendsIDs = twitter.getFriendsIDs(user.getId(), lCursor);
+				System.out.println(user.getName());
+				System.out.println("==========================");
+				do
+				{
+				  for (long i : friendsIDs.getIDs())
+				   {
+			             if(twitter.showUser(i).getName().contains("جامع")) {
+		            	 System.out.println("69");
+			             break;
+				   }else {
+					   System.out.println("مابي الس");
+				   }
+			             
+				   }
+				}while(friendsIDs.hasNext());
+				    
+		         
+			    
+			    
+				
+		 }catch (Exception ignore) {
+			 System.out.println((ignore.getMessage()));
+		}
+		 
+		 
+		 
+		 
+	 }
+	
+	 
+	 public static void count_tweets() {
+
+			{
+				try {
+					   //Connect to DB
+			           String myDriver = "";
+		               String myUrl = "";
+		               Class.forName(myDriver);
+		               Connection conn = DriverManager.getConnection(myUrl, "", "");
+			           System.out.println("connected");
+
+					for (int i = 0; i < num; i++) {
+
+						long id_temp = 0;
+						System.out.print(i);
+
+						PreparedStatement user_number_id = conn.prepareStatement("SELECT id FROM users where db_id=" + i + ";");
+						;
+						ResultSet r1 = user_number_id.executeQuery();
+
+						while (r1.next()) {
+							id_temp = r1.getLong("id");
+							System.out.print(", id:"+id_temp);
+						}
+
+
+						PreparedStatement st = conn.prepareStatement("SELECT count(*)"
+								+ " FROM tweets" + " WHERE users_id=" + id_temp + ";");
+						long tweet_count = 0;
+						ResultSet r2 = st.executeQuery();
+
+						while (r2.next()) {
+							tweet_count = r2.getLong("count(*)");
+							System.out.println(" ,"+tweet_count);
+						}
+
+						PreparedStatement ws = conn.prepareStatement("UPDATE  users  SET Number_Tweets='" + tweet_count + "' where id=" + id_temp + ";");
+						ws.execute();
+
+						System.out.println("");
+
+					} // end loop
+
+					conn.close();
+				} catch (Exception e) {
+					System.out.println(e.getMessage());
+					
+				}
+
+			} // end of usersprocess
+
+		}
+	 
+	 
+     //This Function finds the sum of tweets that contain keyword from l1 l2 l3 l4  
+	 public static void count_keyword_list() {
+
+			{
+				try {
+					  //Connect to DB
+			          String myDriver = "";
+		              String myUrl = "";
+		              Class.forName(myDriver);
+		              Connection conn = DriverManager.getConnection(myUrl, "", "");
+			          System.out.println("connected");
+
+					for (int i = 0; i < 730; i++) {
+
+						long id_temp = 0;
+						System.out.print(i);
+
+						PreparedStatement user_number_id = conn.prepareStatement("SELECT id FROM users where db_id=" + i + ";");
+						;
+						ResultSet r1 = user_number_id.executeQuery();
+
+						while (r1.next()) {
+							id_temp = r1.getLong("id");
+							System.out.print(", id:"+id_temp);
+						}
+
+						PreparedStatement st = conn.prepareStatement("SELECT sum(keyword_list) FROM tweets WHERE users_id=" + id_temp + ";");
+						long total_count = 0;
+						ResultSet r2 = st.executeQuery();
+
+						while (r2.next()) {
+							total_count = r2.getLong("sum(keyword_list)");
+							System.out.println(" ,"+total_count);
+						}
+
+						PreparedStatement ws = conn.prepareStatement("UPDATE  users  SET total_keyword_list='" + total_count + "' where id=" + id_temp + ";");
+						ws.execute();
+						System.out.println("");
+
+					} // end loop
+					conn.close();
+
+				} catch (Exception e) {
+					System.out.println(e.getMessage());
+				}
+			}
+		}
+	 	 
+	 //Method for Bio occupation feature
+	 public static void bio_process() {
+
+			{
+				try {
+					//Connect to DB
+			          String myDriver = "";
+		              String myUrl = "";
+		              Class.forName(myDriver);
+		              Connection conn = DriverManager.getConnection(myUrl, "", "");
+			          System.out.println("connected");
+
+					
+					for (int i = 0; i < num; i++) {
+
+						long id_temp = 0;
+						String bio="";
+						System.out.println("");
+						System.out.print(i);
+
+						PreparedStatement user_number_id = conn.prepareStatement("SELECT id,description FROM users where db_id=" + i + ";");
+						;
+						ResultSet r1 = user_number_id.executeQuery();
+
+						while (r1.next()) {
+							id_temp = r1.getLong("id");// save bio to temp
+							bio=r1.getString("description");
+							System.out.print(", id:"+id_temp+", bio:"+bio);
+						}
+
+						if(!bio.equals("")) {
+						String temp=process(bio);
+						PreparedStatement up = conn.prepareStatement("UPDATE  users  SET description='" + temp + "' where id=" + id_temp + ";");
+						up.execute();
+						PreparedStatement t1;
+						if(temp.contains("طالب")) {
+							 t1 = conn.prepareStatement("UPDATE  users  SET student_in_bio='1' where id=" + id_temp + ";");
+						}else {
+							t1 = conn.prepareStatement("UPDATE  users  SET student_in_bio='0' where id=" + id_temp + ";");
+						}
+						t1.execute();
+
+						PreparedStatement t2;
+						if(temp.contains("موظف")) {
+							 t2 = conn.prepareStatement("UPDATE  users  SET nonstudent_in_bio='1' where id=" + id_temp + ";");
+						}else {
+							 t2 = conn.prepareStatement("UPDATE  users  SET nonstudent_in_bio='0' where id=" + id_temp + ";");
+
+						}
+						t2.execute();
+
+						
+						}
+						
+					} // end loop
+					conn.close();
+
+				} catch (Exception e) {
+					System.out.println(e.getMessage());
+				}
+
+			} // end of usersprocess
+
+		}
+	 
+	
+	 //Most day feature
+	 public static void day() {
+			
+			try {
+
+				//Connect to DB
+			          String myDriver = "";
+		              String myUrl = "";
+		              Class.forName(myDriver);
+		              Connection conn = DriverManager.getConnection(myUrl, "", "");
+			          System.out.println("connected");
+
+			
+			
+			  for(int i=;i<num;i++){//looping over tweets of a user
+				  
+				  System.out.println(i);
+			      PreparedStatement st = conn.prepareStatement("SELECT created_at,id,users_id FROM tweets where db_id="+i+" ;");
+			
+		    ResultSet r1=st.executeQuery();
+		    long user_id=0;
+		    long tweets_id=0;
+		    String created_at="";
+		    
+		    while(r1.next()) {
+		    	user_id = r1.getLong("users_id");//save tweet_text to t
+		    	tweets_id=r1.getLong("id");
+		    	created_at=r1.getString("created_at");   	
+		    }   
+		    //process tweet_text
+		    if(!created_at.equalsIgnoreCase("")) {	
+		    	PreparedStatement p1=conn.prepareStatement("");
+		    	PreparedStatement ws=conn.prepareStatement("");
+
+				//for sun1
+				if(created_at.contains("Sun")) {
+			    	p1=conn.prepareStatement("UPDATE  tweets  SET Day_of_Tweet='1',timep='yes' where id="+tweets_id+";");
+					
+					PreparedStatement get=conn.prepareStatement("SELECT day1 FROM dump20190127.users where id ="+user_id+";");
+				    ResultSet r2=get.executeQuery();
+
+					int day1=0;
+				    while(r2.next()) {
+				    	day1 = r2.getInt("day1");
+				    }
+				    day1=day1+1;	
+					ws=conn.prepareStatement("UPDATE  users  SET day1='"+day1+"' where id="+user_id+";");
+				}
+				
+				//for Mon2
+				if(created_at.contains("Mon")) {
+			    	p1=conn.prepareStatement("UPDATE  tweets  SET Day_of_Tweet='2',timep='yes' where id="+tweets_id+";");
+					
+					PreparedStatement get=conn.prepareStatement("SELECT day2 FROM dump20190127.users where id ="+user_id+";");
+				    ResultSet r2=get.executeQuery();
+					int day2=0;
+				    while(r2.next()) {
+				    	day2 = r2.getInt("day2");
+				    }
+				    day2=day2+1;	
+					ws=conn.prepareStatement("UPDATE  users  SET day2='"+day2+"' where id="+user_id+";");
+				}
+				
+				//for Tue3
+				if(created_at.contains("Tue")) {
+			    	p1=conn.prepareStatement("UPDATE  tweets  SET Day_of_Tweet='3',timep='yes' where id="+tweets_id+";");
+					
+					PreparedStatement get=conn.prepareStatement("SELECT day3 FROM dump20190127.users where id ="+user_id+";");
+				    ResultSet r2=get.executeQuery();
+					int day3=0;
+				    while(r2.next()) {
+				    	day3 = r2.getInt("day3");
+				    }
+				    day3=day3+1;	
+					ws=conn.prepareStatement("UPDATE  users  SET day3='"+day3+"' where id="+user_id+";");
+				}
+				
+				//for Wed4
+				if(created_at.contains("Wed")) {
+			    	p1=conn.prepareStatement("UPDATE  tweets  SET Day_of_Tweet='4',timep='yes' where id="+tweets_id+";");
+					
+					PreparedStatement get=conn.prepareStatement("SELECT day4 FROM dump20190127.users where id ="+user_id+";");
+				    ResultSet r2=get.executeQuery();
+					int day4=0;
+				    while(r2.next()) {
+				    	day4 = r2.getInt("day4");
+				    }
+				    day4=day4+1;	
+					ws=conn.prepareStatement("UPDATE  users  SET day4='"+day4+"' where id="+user_id+";");
+				}
+				
+				//for Thu5
+				if(created_at.contains("Thu")) {
+			    	p1=conn.prepareStatement("UPDATE  tweets  SET Day_of_Tweet='5',timep='yes' where id="+tweets_id+";");
+					
+					PreparedStatement get=conn.prepareStatement("SELECT day5 FROM dump20190127.users where id ="+user_id+";");
+				    ResultSet r2=get.executeQuery();
+					int day5=0;
+				    while(r2.next()) {
+				    	day5 = r2.getInt("day5");
+				    }
+				    day5=day5+1;	
+					ws=conn.prepareStatement("UPDATE  users  SET day5='"+day5+"' where id="+user_id+";");
+				}
+				
+				//for Fri6
+				if(created_at.contains("Fri")) {
+			    	p1=conn.prepareStatement("UPDATE  tweets  SET Day_of_Tweet='6',timep='yes' where id="+tweets_id+";");
+					PreparedStatement get=conn.prepareStatement("SELECT day6 FROM dump20190127.users where id ="+user_id+";");
+				    ResultSet r2=get.executeQuery();
+					int day6=0;
+				    while(r2.next()) {
+				    	day6 = r2.getInt("day6");
+				    }
+				    day6=day6+1;	
+					ws=conn.prepareStatement("UPDATE  users  SET day6='"+day6+"' where id="+user_id+";");
+				}
+				
+				//for Sat7
+				if(created_at.contains("Sat")) {
+			    	p1=conn.prepareStatement("UPDATE  tweets  SET Day_of_Tweet='7',timep='yes' where id="+tweets_id+";");
+					PreparedStatement get=conn.prepareStatement("SELECT day7 FROM dump20190127.users where id ="+user_id+";");
+				    ResultSet r2=get.executeQuery();
+					int day7=0;
+				    while(r2.next()) {
+				    	day7 = r2.getInt("day7");
+				    }
+				    day7=day7+1;	
+					ws=conn.prepareStatement("UPDATE  users  SET day7='"+day7+"' where id="+user_id+";");
+				}
+				
+				ws.execute();
+				p1.execute();
+		
+		    }
+
+		    
+			  }//end for
+			}catch (Exception e) {System.out.println(e.getMessage());}
+			
+			
+			
+			
+		}
+
+	 //Mehod for Most quarter feature
+	 private static void maxtime() {
+					
+
+			try {
+
+				//Connect to DB
+			          String myDriver = "";
+		              String myUrl = "";
+		              Class.forName(myDriver);
+		              Connection conn = DriverManager.getConnection(myUrl, "", "");
+			          System.out.println("connected");
+
+			
+			
+			  for(int i=0;i<num;i++) {
+				 
+			PreparedStatement st = conn.prepareStatement("SELECT day1,day2,day3,day4,day5,day6,day7,test FROM dump20190127.users where  db_id="+i+" ;");
+			
+		    ResultSet r1=st.executeQuery();
+		    int day1=0;
+		    int day2=0;
+		    int day3=0;
+		    int day4=0;
+		    int day5=0;
+		    int day6=0;
+		    int day7=0;	    
+		    int max=-1;
+
+		    while(r1.next()) {
+		    	day1=r1.getInt("day1");
+		    	day2=r1.getInt("day2");
+		    	day3=r1.getInt("day3");
+		    	day4=r1.getInt("day4");
+		    	day5=r1.getInt("day5");
+		    	day6=r1.getInt("day6");
+		    	day7=r1.getInt("day7");
+		    	max=r1.getInt("test");
+
+		    }   
+
+		    if(max==-1) {
+				System.out.println("continue"); 
+		    	continue;
+
+		    }
+
+		    
+		    //process tweet_text
+		    PreparedStatement p1=conn.prepareStatement("");
+		    if(max==day1) {	
+		    	p1=conn.prepareStatement("UPDATE  users  SET most_day='1' where db_id="+i+";");
+			   // System.out.println("day1");
+
+		    }
+		    if(max==day2) {	
+		    	p1=conn.prepareStatement("UPDATE  users  SET most_day='2' where db_id="+i+";");
+			   // System.out.println("day2");
+
+		    }
+		    if(max==day3) {	
+		    	p1=conn.prepareStatement("UPDATE  users  SET most_day='3' where db_id="+i+";");
+			   // System.out.println("day3");
+
+		    }
+		    if(max==day4) {	
+		    	p1=conn.prepareStatement("UPDATE  users  SET most_day='4' where db_id="+i+";");
+			  //  System.out.println("day4");
+
+		    }
+		    if(max==day5) {	
+		    	p1=conn.prepareStatement("UPDATE  users  SET most_day='5' where db_id="+i+";");
+			   // System.out.println("day5");
+
+		    }
+		    if(max==day6) {	
+		    	p1=conn.prepareStatement("UPDATE  users  SET most_day='6' where db_id="+i+";");
+			  // System.out.println("day6");
+
+		    }
+		    if(max==day7) {	
+		    	p1=conn.prepareStatement("UPDATE  users  SET most_day='7' where db_id="+i+";");
+			    //System.out.println("day7");
+
+		    }
+		    p1.execute();
+		    
+		}			  
+			}catch (Exception e) {
+				System.out.println(e.getMessage());				
+			}}
